@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "MyProject",
+    "slug": "MyProject",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/Logo.jpeg",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/Logo.jpeg",
+      "resizeMode": "contain",
+      "backgroundColor": "#054A29"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/Logo.jpeg",
+        "backgroundColor": "#054A29"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "../assets/Logo.jpeg"
+    }
+  }
+}
