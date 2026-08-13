@@ -9,8 +9,10 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Ya 'react-native-vector-icons/Ionicons'
+import { Ionicons } from '@expo/vector-icons';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -26,41 +28,56 @@ const ThemeColors = {
   cardBg: '#FFFFFF',
   inputBg: '#F8F9FA',
   inputBorder: '#E2E8F0',
-  iconGrey: '#718096', // Crisp Pure Grey Icon Color
+  iconGrey: '#718096',
   placeholderText: '#A0AEC0',
   textDark: '#1A202C',
   textMuted: '#718096',
   forgotText: '#0B663B',
 };
 
-const LoginScreen = ({ navigation }) => {
-  const [emailOrPhone, setEmailOrPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+const ForgotPasswordScreen = ({ navigation }) => {
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSendResetCode = () => {
+    if (!email.trim()) {
+      Alert.alert('Validation Error', 'Please enter your email address.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      return;
+    }
+
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      Alert.alert(
+        'Reset Code Sent',
+        `A password reset code has been sent to ${email}`,
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation?.navigate('OTPVerification', { email: email.trim() }),
+          },
+        ]
+      );
+    }, 1200);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={ThemeColors.primaryDark} />
 
-      {/* Top Section */}
+      {/* Header Section */}
       <View style={styles.topSection}>
-        {/* Background Stars */}
         <Text style={[styles.starGold, { top: 12, left: 18, fontSize: 18 }]}>★</Text>
         <Text style={[styles.starGrey, { top: 15, left: 110, fontSize: 13 }]}>★</Text>
         <Text style={[styles.starGold, { bottom: 18, left: 22, fontSize: 16 }]}>★</Text>
-
         <Text style={[styles.starGold, { top: 18, right: 150, fontSize: 12 }]}>★</Text>
-        <Text style={[styles.starGrey, { top: 75, right: 25, fontSize: 15 }]}>★</Text>
-        <Text style={[styles.starGold, { bottom: 20, right: 18, fontSize: 14 }]}>★</Text>
 
-        {/* Background Dots */}
-        <View style={[styles.dotGold, { top: 38, left: 65 }]} />
-        <View style={[styles.dotGrey, { top: 70, left: 20 }]} />
-        <View style={[styles.dotGold, { top: 110, left: 75 }]} />
-        <View style={[styles.dotGrey, { top: 32, right: 100 }]} />
-        <View style={[styles.dotGold, { top: 115, right: 55 }]} />
-
-        {/* Number Badges */}
         <View style={[styles.numberBadgeSmall, styles.badge2]}>
           <Text style={styles.badgeTextSmall}>2</Text>
         </View>
@@ -71,7 +88,6 @@ const LoginScreen = ({ navigation }) => {
           <Text style={styles.badgeTextSmall}>4</Text>
         </View>
 
-        {/* Coins Stack */}
         <View style={styles.coinStack}>
           <View style={[styles.coin, styles.topCoin]}>
             <Text style={styles.coinText}>PKR</Text>
@@ -81,7 +97,6 @@ const LoginScreen = ({ navigation }) => {
           <View style={styles.coin} />
         </View>
 
-        {/* Header Content */}
         <View style={styles.headerContent}>
           <Image
             source={require('../assets/LoginLogo.png')}
@@ -95,77 +110,60 @@ const LoginScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Floating Card */}
+      {/* Floating Card Section */}
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
         <View style={styles.floatingCard}>
-          <Text style={styles.welcomeTitle}>Welcome Back</Text>
-          <Text style={styles.welcomeSubtitle}>
-            Log in to access your wallet & modules
-          </Text>
+          {/* Back Button */}
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation?.goBack()}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={20} color={ThemeColors.textDark} />
+          </TouchableOpacity>
 
-          {/* Email / Mobile Field */}
-          <Text style={styles.inputLabel}>Email or Mobile Number</Text>
+          <Text style={styles.welcomeTitle}>Forgot Password</Text>
+          <Text style={styles.welcomeSubtitle}>Enter your email address</Text>
+
+          {/* Email Address */}
+          <Text style={styles.inputLabel}>Email Address</Text>
           <View style={styles.inputWrapper}>
-            <Ionicons name="person-outline" size={18} color={ThemeColors.iconGrey} style={styles.inputIcon} />
+            <Ionicons name="mail-outline" size={18} color={ThemeColors.iconGrey} style={styles.inputIcon} />
             <TextInput
               style={styles.textInput}
-              placeholder="Enter email or mobile number"
+              placeholder="Enter your email"
               placeholderTextColor={ThemeColors.placeholderText}
-              value={emailOrPhone}
-              onChangeText={setEmailOrPhone}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
 
-          {/* Password Field */}
-          <Text style={styles.inputLabel}>Password</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="lock-closed-outline" size={18} color={ThemeColors.iconGrey} style={styles.inputIcon} />
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter your password"
-              placeholderTextColor={ThemeColors.placeholderText}
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons
-                name={showPassword ? 'eye-outline' : 'eye-off-outline'}
-                size={18}
-                color={ThemeColors.iconGrey}
-              />
-            </TouchableOpacity>
-          </View>
+          {/* Send Reset Code Button */}
+          <TouchableOpacity
+            style={styles.actionBtn}
+            activeOpacity={0.8}
+            onPress={handleSendResetCode}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color={ThemeColors.white} />
+            ) : (
+              <Text style={styles.actionBtnText}>Send Reset Code</Text>
+            )}
+          </TouchableOpacity>
 
-          {/* Forgot Password Link */}
-         <TouchableOpacity 
-  style={styles.forgotBtn}
-  onPress={() => navigation?.navigate('ForgotPassword')}
-  activeOpacity={0.7}
->
-  <Text style={styles.forgotText}>Forgot Password?</Text>
-</TouchableOpacity>
-
-          {/* Compact Login Button */}
-         {/* Compact Login Button */}
-<TouchableOpacity 
-  style={styles.loginBtn} 
-  activeOpacity={0.8}
-  onPress={() => navigation.replace('TabNavigator')}
->
-  <Text style={styles.loginBtnText}>Log In</Text>
-</TouchableOpacity>
-
-          {/* Footer Link */}
+          {/* Remembered Password / Login Link */}
           <View style={styles.footerRow}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
-           <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-  <Text style={styles.signUpText}>Sign Up</Text>
-</TouchableOpacity>
+            <Text style={styles.footerText}>Remembered your password? </Text>
+            <TouchableOpacity onPress={() => navigation?.navigate('Login')}>
+              <Text style={styles.loginLinkText}>Log In</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -185,34 +183,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
-
-  // Stars & Dots
   starGold: { position: 'absolute', color: ThemeColors.accentYellow, opacity: 0.95 },
   starGrey: { position: 'absolute', color: ThemeColors.starGrey, opacity: 0.85 },
-  dotGold: {
-    position: 'absolute',
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: ThemeColors.accentYellow,
-    opacity: 0.9,
-  },
-  dotGrey: {
-    position: 'absolute',
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: ThemeColors.starGrey,
-    opacity: 0.8,
-  },
-
   headerContent: { alignItems: 'center', marginTop: 10 },
   logoImage: { width: 60, height: 60, marginBottom: 6 },
   brandTitle: { fontSize: 22, fontWeight: 'bold', color: ThemeColors.white },
   brandTitleGold: { color: ThemeColors.accentYellow },
   brandSubtitle: { fontSize: 12, color: ThemeColors.white, opacity: 0.8, marginTop: 2 },
 
-  // Badges & Coins
   numberBadge: {
     position: 'absolute',
     width: 38,
@@ -259,7 +237,6 @@ const styles = StyleSheet.create({
   },
   coinText: { fontSize: 7, fontWeight: 'bold', color: ThemeColors.coinText },
 
-  // Scroll Container & Floating Card
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: 16,
@@ -270,7 +247,7 @@ const styles = StyleSheet.create({
     backgroundColor: ThemeColors.cardBg,
     borderRadius: 24,
     paddingHorizontal: 24,
-    paddingTop: 28,
+    paddingTop: 24,
     paddingBottom: 32,
     elevation: 4,
     shadowColor: ThemeColors.black,
@@ -278,11 +255,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 6,
   },
-  welcomeTitle: { fontSize: 24, fontWeight: 'bold', color: ThemeColors.textDark, marginBottom: 6 },
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#EEF2F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  welcomeTitle: { fontSize: 24, fontWeight: 'bold', color: ThemeColors.textDark, marginBottom: 4 },
   welcomeSubtitle: { fontSize: 13, color: ThemeColors.textMuted, marginBottom: 24 },
 
-  // Inputs & Vector Icons
-  inputLabel: { fontSize: 13, fontWeight: 'bold', color: ThemeColors.textDark, marginBottom: 8, marginTop: 12 },
+  inputLabel: { fontSize: 13, fontWeight: 'bold', color: ThemeColors.textDark, marginBottom: 8, marginTop: 8 },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -292,22 +277,15 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 52,
+    marginBottom: 24,
   },
-  inputIcon: {
-    marginRight: 10,
-  },
+  inputIcon: { marginRight: 10 },
   textInput: { flex: 1, fontSize: 14, color: ThemeColors.textDark },
 
-  forgotBtn: { alignSelf: 'flex-end', marginTop: 12, marginBottom: 20 },
-  forgotText: { fontSize: 13, fontWeight: 'bold', color: ThemeColors.forgotText },
-
-  // Compact Login Button
-  loginBtn: {
+  actionBtn: {
     backgroundColor: ThemeColors.buttonGreen,
-    borderRadius: 12,
-    height: 44,
-    width: '85%',
-    alignSelf: 'center',
+    borderRadius: 14,
+    height: 50,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 3,
@@ -316,10 +294,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 3,
   },
-  loginBtnText: { color: ThemeColors.white, fontSize: 15, fontWeight: 'bold' },
+  actionBtnText: { color: ThemeColors.white, fontSize: 16, fontWeight: 'bold' },
+
   footerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 24 },
   footerText: { fontSize: 13, color: ThemeColors.textMuted },
-  signUpText: { fontSize: 13, fontWeight: 'bold', color: ThemeColors.forgotText },
+  loginLinkText: { fontSize: 13, fontWeight: 'bold', color: ThemeColors.forgotText },
 });
 
-export default LoginScreen;
+export default ForgotPasswordScreen;
