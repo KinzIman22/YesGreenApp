@@ -8,6 +8,8 @@ import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import OTPVerificationScreen from '../screens/OTPVerificationScreen';
 import ForgotPasswordScreen from '../screens/ForgetPasswordScreen';
+import DepositScreen from '../screens/DepositScreen';
+import WithdrawScreen from '../screens/WithdrawScreen';
 
 // Import Tab Navigator (jo HomeScreen, Wallet, etc. ko hold karta hai)
 import TabNavigator from './TabNavigator';
@@ -26,6 +28,8 @@ export default function StackNavigator() {
         
         {/* TabNavigator ko yahan register kiya gaya hai */}
         <Stack.Screen name="TabNavigator" component={TabNavigator} />
+        <Stack.Screen name="DepositScreen" component={DepositScreen} />
+        <Stack.Screen name="WithdrawScreen" component={WithdrawScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

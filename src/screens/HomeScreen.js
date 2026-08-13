@@ -12,33 +12,30 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { LinearGradient } from 'expo-linear-gradient';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_WIDTH = SCREEN_WIDTH - 32;
+const CARD_WIDTH = (BANNER_WIDTH - 12) / 2; // Perfect 2-column calculation
 
 const ThemeColors = {
   primaryDark: '#054A29',
-  primaryLight: '#1A6C3E', 
   screenBg: '#F4F7F5',
   cardBg: '#FFFFFF',
   textDark: '#1A202C',
   textMuted: '#2D3748',
   textSubDark: '#4A5568',
   white: '#FFFFFF',
+  balanceCardBg: '#054A29',
+  bannerGreen: '#054A29',
   
-  // Gradient Pairs (Light -> Dark)
-  deepGreenGradient: ['#1A6C3E', '#054A29'],
-  cardMembershipGradient: ['#148F4C', '#0B522C'],
-  
-  // Other Colors
+  // Program Cards Colors
+  cardGreen: '#0B522C',
   cardBlue: '#1A4D8C',
   cardBrown: '#94380B',
   cardPurple: '#421E68',
+  
   badgeGreenBg: '#C5E1A5',
   dividerDark: '#CBD5E0',
-  iconBgLight: '#E8F5E9',
-  iconBgStart: '#FFFFFF',
 };
 
 const HomeScreen = ({ navigation }) => {
@@ -95,16 +92,8 @@ const HomeScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            {/* Profile Avatar */}
-            <TouchableOpacity style={styles.profileAvatarContainer}>
-              <LinearGradient
-                colors={ThemeColors.deepGreenGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.profileAvatarGradient}
-              >
-                <Ionicons name="person" size={20} color={ThemeColors.white} />
-              </LinearGradient>
+            <TouchableOpacity style={styles.profileAvatar}>
+              <Ionicons name="person" size={20} color={ThemeColors.white} />
             </TouchableOpacity>
           </View>
         </View>
@@ -149,7 +138,7 @@ const HomeScreen = ({ navigation }) => {
         {/* Draw Stats Card */}
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
-            <MaterialCommunityIcons name="calendar-clock" size={24} color={ThemeColors.primaryDark} />
+            <MaterialCommunityIcons name="calendar-clock" size={22} color={ThemeColors.primaryDark} />
             <Text style={styles.statTitle}>Total Daily Draws</Text>
             <Text style={styles.statValue}>1440</Text>
             <Text style={styles.statSub}>After 4 Minutes</Text>
@@ -158,7 +147,7 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.statDivider} />
 
           <View style={styles.statItem}>
-            <Ionicons name="people" size={24} color={ThemeColors.primaryDark} />
+            <Ionicons name="people" size={22} color={ThemeColors.primaryDark} />
             <Text style={styles.statTitle}>Active Programs</Text>
             <Text style={styles.statValue}>4</Text>
             <Text style={styles.statSub}>Running 24/7</Text>
@@ -167,7 +156,7 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.statDivider} />
 
           <View style={styles.statItem}>
-            <Ionicons name="time-outline" size={24} color={ThemeColors.primaryDark} />
+            <Ionicons name="time-outline" size={22} color={ThemeColors.primaryDark} />
             <Text style={styles.statTitle}>Draw Interval</Text>
             <Text style={styles.statValue}>4</Text>
             <Text style={styles.statSub}>Every 4 minutes</Text>
@@ -175,98 +164,80 @@ const HomeScreen = ({ navigation }) => {
         </View>
 
         {/* Total Balance Card */}
-        <LinearGradient
-          colors={ThemeColors.deepGreenGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.balanceCardGradient}
-        >
-          <View style={styles.balanceCardContent}>
-            <LinearGradient
-              colors={[ThemeColors.iconBgStart, ThemeColors.iconBgLight]}
-              style={styles.fancyWalletWrapper}
-            >
-              <Ionicons name="wallet" size={22} color={ThemeColors.primaryDark} />
-            </LinearGradient>
-            
-            <View style={styles.balanceTextContainer}>
-              <Text style={styles.balanceTitle}>Total Balance</Text>
-              <Text style={styles.balanceAmount}>PKR 0</Text>
-            </View>
+        <View style={styles.balanceCard}>
+          <View style={styles.fancyWalletWrapper}>
+            <Ionicons name="wallet" size={22} color={ThemeColors.primaryDark} />
           </View>
-        </LinearGradient>
+          <View style={styles.balanceTextContainer}>
+            <Text style={styles.balanceTitle}>Total Balance</Text>
+            <Text style={styles.balanceAmount}>PKR 0</Text>
+          </View>
+        </View>
 
         {/* Quick Access Grid */}
         <Text style={styles.sectionHeader}>Quick Access</Text>
         <View style={styles.quickAccessRow}>
-          <TouchableOpacity style={styles.quickAccessCard}>
-            <LinearGradient
-              colors={[ThemeColors.iconBgStart, ThemeColors.iconBgLight]}
-              style={styles.fancyIconWrapper}
-            >
-              <MaterialCommunityIcons name="cash-plus" size={28} color={ThemeColors.primaryDark} />
+          {/* Deposit Button */}
+          <TouchableOpacity 
+            style={styles.quickAccessCard}
+            onPress={() => navigation.navigate('DepositScreen')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.fancyIconWrapper}>
+              <MaterialCommunityIcons name="cash-plus" size={26} color={ThemeColors.primaryDark} />
               <Ionicons name="arrow-down-circle" size={14} color="#2E7D32" style={styles.iconBadgeOverlay} />
-            </LinearGradient>
+            </View>
             <Text style={styles.quickAccessLabel} numberOfLines={1}>Deposit</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.quickAccessCard}>
-            <LinearGradient
-              colors={[ThemeColors.iconBgStart, ThemeColors.iconBgLight]}
-              style={styles.fancyIconWrapper}
-            >
-              <MaterialCommunityIcons name="cash-minus" size={28} color={ThemeColors.primaryDark} />
+          {/* Withdraw Button */}
+          <TouchableOpacity 
+            style={styles.quickAccessCard}
+            onPress={() => navigation.navigate('WithdrawScreen')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.fancyIconWrapper}>
+              <MaterialCommunityIcons name="cash-minus" size={26} color={ThemeColors.primaryDark} />
               <Ionicons name="arrow-up-circle" size={14} color="#D32F2F" style={styles.iconBadgeOverlay} />
-            </LinearGradient>
+            </View>
             <Text style={styles.quickAccessLabel} numberOfLines={1}>Withdraw</Text>
           </TouchableOpacity>
 
+          {/* Refer Button */}
           <TouchableOpacity style={styles.quickAccessCard}>
-            <LinearGradient
-              colors={[ThemeColors.iconBgStart, ThemeColors.iconBgLight]}
-              style={styles.fancyIconWrapper}
-            >
-              <MaterialCommunityIcons name="account-network" size={28} color={ThemeColors.primaryDark} />
-            </LinearGradient>
+            <View style={styles.fancyIconWrapper}>
+              <MaterialCommunityIcons name="account-network" size={26} color={ThemeColors.primaryDark} />
+            </View>
             <Text style={styles.quickAccessLabel} numberOfLines={1}>Refer</Text>
           </TouchableOpacity>
 
+          {/* All Shops Button */}
           <TouchableOpacity style={styles.quickAccessCard}>
-            <LinearGradient
-              colors={[ThemeColors.iconBgStart, ThemeColors.iconBgLight]}
-              style={styles.fancyIconWrapper}
-            >
-              <MaterialCommunityIcons name="storefront" size={28} color={ThemeColors.primaryDark} />
-            </LinearGradient>
+            <View style={styles.fancyIconWrapper}>
+              <MaterialCommunityIcons name="storefront" size={26} color={ThemeColors.primaryDark} />
+            </View>
             <Text style={styles.quickAccessLabel} numberOfLines={1}>All Shops</Text>
           </TouchableOpacity>
         </View>
 
         {/* Live Qur'a Andazi Banner */}
-        <TouchableOpacity style={styles.liveBannerContainer} activeOpacity={0.9}>
-          <LinearGradient
-            colors={ThemeColors.deepGreenGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.liveBannerGradient}
-          >
-            <View style={styles.liveBannerLeft}>
-              <View style={styles.liveImageContainer}>
-                <Image 
-                  source={require('../assets/Live.png')} 
-                  style={styles.liveIconImage} 
-                  resizeMode="cover" 
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.liveBannerTitle}>Live Qur'a Andazi</Text>
-                <Text style={styles.liveBannerSub} numberOfLines={1}>Draw results • Winners • New joiners</Text>
-              </View>
+        <TouchableOpacity style={styles.liveBanner}>
+          <View style={styles.liveBannerLeft}>
+            <View style={styles.liveImageContainer}>
+              <Image 
+                source={require('../assets/Live.png')} 
+                style={styles.liveIconImage} 
+                resizeMode="cover" 
+              />
             </View>
-            <View style={styles.arrowCircle}>
-              <Ionicons name="chevron-forward" size={18} color={ThemeColors.white} />
+            <View style={{ flex: 1, justifyContent: 'center' }}>
+              <Text style={styles.liveBannerTitle}>Live Qur'a Andazi</Text>
+              <Text style={styles.liveBannerSub} numberOfLines={1}>Draw results • Winners • New joiners</Text>
             </View>
-          </LinearGradient>
+          </View>
+          <View style={styles.arrowCircle}>
+            <Ionicons name="chevron-forward" size={18} color={ThemeColors.white} />
+          </View>
         </TouchableOpacity>
 
         {/* Programs Grid Section */}
@@ -278,24 +249,15 @@ const HomeScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.programGrid}>
-          {/* Card 1: Membership - Green Gradient */}
-          <TouchableOpacity style={styles.programCardContainer}>
-            <LinearGradient
-              colors={ThemeColors.cardMembershipGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={styles.programCardGradient}
-            >
-              <Text style={styles.programTitle}>MemberShip Qur'a{'\n'}Andazi</Text>
-              <Image 
-                source={require('../assets/membership_qura_andazi.png')} 
-                style={styles.programIconImage} 
-                resizeMode="contain" 
-              />
-            </LinearGradient>
+          <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardGreen }]}>
+            <Text style={styles.programTitle}>MemberShip Qur'a{'\n'}Andazi</Text>
+            <Image 
+              source={require('../assets/membership_qura_andazi.png')} 
+              style={styles.programIconImage} 
+              resizeMode="contain" 
+            />
           </TouchableOpacity>
 
-          {/* Card 2: Car */}
           <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardBlue }]}>
             <Text style={styles.programTitle}>Car Qur'a Andazi</Text>
             <Image 
@@ -305,7 +267,6 @@ const HomeScreen = ({ navigation }) => {
             />
           </TouchableOpacity>
 
-          {/* Card 3: Daily */}
           <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardBrown }]}>
             <Text style={styles.programTitle}>Daily Qur'a Andazi</Text>
             <Image 
@@ -315,7 +276,6 @@ const HomeScreen = ({ navigation }) => {
             />
           </TouchableOpacity>
 
-          {/* Card 4: Shopping */}
           <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardPurple }]}>
             <Text style={styles.programTitle}>Shopping Qur'a{'\n'}Andazi</Text>
             <Image 
@@ -364,16 +324,11 @@ const styles = StyleSheet.create({
   langBtnActive: { backgroundColor: ThemeColors.primaryDark },
   langText: { fontSize: 11, fontWeight: 'bold', color: ThemeColors.textSubDark },
   langTextActive: { color: ThemeColors.white },
-  
-  profileAvatarContainer: {
+  profileAvatar: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    overflow: 'hidden',
-  },
-  profileAvatarGradient: {
-    width: '100%',
-    height: '100%',
+    backgroundColor: ThemeColors.primaryDark,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -415,8 +370,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: ThemeColors.cardBg,
     borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
     marginBottom: 14,
     elevation: 2,
     shadowColor: '#000',
@@ -424,32 +379,27 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
   },
-  statItem: { flex: 1, alignItems: 'center' },
+  statItem: { flex: 1, alignItems: 'center', paddingHorizontal: 2 },
   statTitle: { fontSize: 10, fontWeight: 'bold', color: ThemeColors.textDark, marginTop: 4, textAlign: 'center' },
-  statValue: { fontSize: 16, fontWeight: 'bold', color: ThemeColors.textDark, marginVertical: 2 },
-  statSub: { fontSize: 9, fontWeight: '600', color: ThemeColors.textMuted },
-  statDivider: { width: 1.5, backgroundColor: ThemeColors.dividerDark, height: '80%', alignSelf: 'center' },
+  statValue: { fontSize: 15, fontWeight: 'bold', color: ThemeColors.textDark, marginVertical: 2 },
+  statSub: { fontSize: 9, fontWeight: '600', color: ThemeColors.textMuted, textAlign: 'center' },
+  statDivider: { width: 1, backgroundColor: ThemeColors.dividerDark, height: '70%', alignSelf: 'center' },
 
-  /* Balance Card */
-  balanceCardGradient: {
-    borderRadius: 14,
-    marginBottom: 18,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-  },
-  balanceCardContent: {
+  /* Total Balance Section */
+  balanceCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: ThemeColors.balanceCardBg,
+    borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 16,
+    marginBottom: 18,
   },
   fancyWalletWrapper: {
-    width: 42,
-    height: 42,
+    width: 40,
+    height: 40,
     borderRadius: 12,
+    backgroundColor: '#E8F5E9',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -464,28 +414,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 18,
-    gap: 8,
   },
   quickAccessCard: {
-    flex: 1,
+    width: (BANNER_WIDTH - 24) / 4,
     backgroundColor: ThemeColors.cardBg,
-    borderRadius: 16,
+    borderRadius: 14,
     paddingVertical: 10,
     alignItems: 'center',
-    elevation: 3,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
   },
   fancyIconWrapper: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: '#E8F5E9',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    overflow: 'hidden',
   },
   iconBadgeOverlay: {
     position: 'absolute',
@@ -497,26 +446,19 @@ const styles = StyleSheet.create({
   quickAccessLabel: { fontSize: 10, fontWeight: 'bold', color: ThemeColors.textDark, marginTop: 6, textAlign: 'center' },
 
   /* Live Banner */
-  liveBannerContainer: {
-    marginBottom: 18,
-    borderRadius: 14,
-    overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-  },
-  liveBannerGradient: {
+  liveBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    backgroundColor: ThemeColors.bannerGreen,
+    borderRadius: 14,
     padding: 12,
+    marginBottom: 18,
   },
   liveBannerLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 },
   liveImageContainer: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     borderRadius: 10,
     overflow: 'hidden',
     marginRight: 10,
@@ -526,11 +468,11 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  liveBannerTitle: { fontSize: 14, fontWeight: 'bold', color: ThemeColors.white },
-  liveBannerSub: { fontSize: 10, color: '#E2E8F0', fontWeight: '500', marginTop: 2 },
+  liveBannerTitle: { fontSize: 13, fontWeight: 'bold', color: ThemeColors.white },
+  liveBannerSub: { fontSize: 10, color: '#E2E8F0', fontWeight: '500', marginTop: 1 },
   arrowCircle: {
-    width: 30,
-    height: 30,
+    width: 28,
+    height: 28,
     borderRadius: 8,
     backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
@@ -555,40 +497,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: 12,
   },
-  
   programCard: {
-    width: '48%',
-    height: 150,
-    borderRadius: 18,
-    padding: 12,
-    justifyContent: 'space-between', // Fixed typo here
+    width: CARD_WIDTH,
+    height: 140,
+    borderRadius: 16,
+    padding: 10,
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 12,
   },
-  programCardContainer: {
-    width: '48%',
-    height: 150,
-    borderRadius: 18,
-    overflow: 'hidden',
-  },
-  programCardGradient: {
-    width: '100%',
-    height: '100%',
-    padding: 12,
-    justifyContent: 'space-between', // Fixed typo here
-    alignItems: 'center',
-  },
-  
   programTitle: { 
-    fontSize: 13, 
+    fontSize: 12, 
     fontWeight: 'bold', 
     color: ThemeColors.white,
     textAlign: 'center',
   },
   programIconImage: { 
-    width: '80%',
-    height: 75,
+    width: '85%',
+    height: 65,
   },
 });
 
