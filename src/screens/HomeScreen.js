@@ -8,14 +8,10 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Dimensions,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { VideoView, useVideoPlayer } from 'expo-video';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BANNER_WIDTH = SCREEN_WIDTH - 32;
-const CARD_WIDTH = (BANNER_WIDTH - 12) / 2; // Perfect 2-column calculation
+import { useResponsiveLayout } from '../utils/responsive'; // Import responsive helper
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -39,8 +35,13 @@ const ThemeColors = {
 };
 
 const HomeScreen = ({ navigation }) => {
+  const { width, isMobile, containerMaxWidth } = useResponsiveLayout();
   const [lang, setLang] = useState('EN');
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+
+  // Dynamic banner & card width calculations based on current screen layout
+  const BANNER_WIDTH = containerMaxWidth === '100%' ? width - 32 : containerMaxWidth - 32;
+  const CARD_WIDTH = (BANNER_WIDTH - 12) / 2;
 
   const player1 = useVideoPlayer(require('../assets/Win.webm'), (p) => {
     p.loop = true;
@@ -63,230 +64,241 @@ const HomeScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={ThemeColors.screenBg} />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        
-        {/* Top Header */}
-        <View style={styles.topHeader}>
-          <View style={styles.logoRow}>
-            <Image 
-              source={require('../assets/Logo.jpeg')} 
-              style={styles.headerLogoImage} 
-              resizeMode="contain" 
-            />
-            <Text style={styles.headerTitle}>there</Text>
-          </View>
-
-          <View style={styles.headerRight}>
-            <View style={styles.langToggle}>
-              <TouchableOpacity
-                style={[styles.langBtn, lang === 'EN' && styles.langBtnActive]}
-                onPress={() => setLang('EN')}
-              >
-                <Text style={[styles.langText, lang === 'EN' && styles.langTextActive]}>EN</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.langBtn, lang === 'UR' && styles.langBtnActive]}
-                onPress={() => setLang('UR')}
-              >
-                <Text style={[styles.langText, lang === 'UR' && styles.langTextActive]}>UR</Text>
-              </TouchableOpacity>
+      <View style={[styles.responsiveWrapper, { maxWidth: containerMaxWidth === '100%' ? '100%' : containerMaxWidth }]}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          
+          {/* Top Header */}
+          <View style={styles.topHeader}>
+            <View style={styles.logoRow}>
+              <Image 
+                source={require('../assets/Logo.jpeg')} 
+                style={styles.headerLogoImage} 
+                resizeMode="contain" 
+              />
+              <Text style={styles.headerTitle}>there</Text>
             </View>
 
-            <TouchableOpacity style={styles.profileAvatar}>
-              <Ionicons name="person" size={20} color={ThemeColors.white} />
+            <View style={styles.headerRight}>
+              <View style={styles.langToggle}>
+                <TouchableOpacity
+                  style={[styles.langBtn, lang === 'EN' && styles.langBtnActive]}
+                  onPress={() => setLang('EN')}
+                >
+                  <Text style={[styles.langText, lang === 'EN' && styles.langTextActive]}>EN</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.langBtn, lang === 'UR' && styles.langBtnActive]}
+                  onPress={() => setLang('UR')}
+                >
+                  <Text style={[styles.langText, lang === 'UR' && styles.langTextActive]}>UR</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity style={styles.profileAvatar}>
+                <Ionicons name="person" size={20} color={ThemeColors.white} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Video Banner Section */}
+          <View style={[styles.videoBannerContainer, { width: BANNER_WIDTH }]}>
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onScroll={handleVideoScroll}
+              scrollEventThrottle={16}
+              decelerationRate="fast"
+              snapToInterval={BANNER_WIDTH}
+              snapToAlignment="center"
+            >
+              <View style={[styles.videoSlide, { width: BANNER_WIDTH }]}>
+                <VideoView
+                  player={player1}
+                  style={styles.videoPlayer}
+                  fullscreenOptions={{ enable: true }}
+                  allowsPictureInPicture
+                />
+              </View>
+
+              <View style={[styles.videoSlide, { width: BANNER_WIDTH }]}>
+                <VideoView
+                  player={player2}
+                  style={styles.videoPlayer}
+                  fullscreenOptions={{ enable: true }}
+                  allowsPictureInPicture
+                />
+              </View>
+            </ScrollView>
+
+            <View style={styles.bannerDots}>
+              <View style={[styles.dot, activeVideoIndex === 0 && styles.activeDot]} />
+              <View style={[styles.dot, activeVideoIndex === 1 && styles.activeDot]} />
+            </View>
+          </View>
+
+          {/* Draw Stats Card */}
+          <View style={styles.statsCard}>
+            <View style={styles.statItem}>
+              <MaterialCommunityIcons name="calendar-clock" size={22} color={ThemeColors.primaryDark} />
+              <Text style={styles.statTitle}>Total Daily Draws</Text>
+              <Text style={styles.statValue}>1440</Text>
+              <Text style={styles.statSub}>After 4 Minutes</Text>
+            </View>
+
+            <View style={styles.statDivider} />
+
+            <View style={styles.statItem}>
+              <Ionicons name="people" size={22} color={ThemeColors.primaryDark} />
+              <Text style={styles.statTitle}>Active Programs</Text>
+              <Text style={styles.statValue}>4</Text>
+              <Text style={styles.statSub}>Running 24/7</Text>
+            </View>
+
+            <View style={styles.statDivider} />
+
+            <View style={styles.statItem}>
+              <Ionicons name="time-outline" size={22} color={ThemeColors.primaryDark} />
+              <Text style={styles.statTitle}>Draw Interval</Text>
+              <Text style={styles.statValue}>4</Text>
+              <Text style={styles.statSub}>Every 4 minutes</Text>
+            </View>
+          </View>
+
+          {/* Total Balance Card */}
+          <View style={styles.balanceCard}>
+            <View style={styles.fancyWalletWrapper}>
+              <Ionicons name="wallet" size={22} color={ThemeColors.primaryDark} />
+            </View>
+            <View style={styles.balanceTextContainer}>
+              <Text style={styles.balanceTitle}>Total Balance</Text>
+              <Text style={styles.balanceAmount}>PKR 0</Text>
+            </View>
+          </View>
+
+          {/* Quick Access Grid */}
+          <Text style={styles.sectionHeader}>Quick Access</Text>
+          <View style={styles.quickAccessRow}>
+            {/* Deposit Button */}
+            <TouchableOpacity 
+              style={[styles.quickAccessCard, { width: (BANNER_WIDTH - 24) / 4 }]}
+              onPress={() => navigation.navigate('DepositScreen')}
+              activeOpacity={0.7}
+            >
+              <View style={styles.fancyIconWrapper}>
+                <MaterialCommunityIcons name="cash-plus" size={26} color={ThemeColors.primaryDark} />
+                <Ionicons name="arrow-down-circle" size={14} color="#2E7D32" style={styles.iconBadgeOverlay} />
+              </View>
+              <Text style={styles.quickAccessLabel} numberOfLines={1}>Deposit</Text>
+            </TouchableOpacity>
+
+            {/* Withdraw Button */}
+            <TouchableOpacity 
+              style={[styles.quickAccessCard, { width: (BANNER_WIDTH - 24) / 4 }]}
+              onPress={() => navigation.navigate('WithdrawScreen')}
+              activeOpacity={0.7}
+            >
+              <View style={styles.fancyIconWrapper}>
+                <MaterialCommunityIcons name="cash-minus" size={26} color={ThemeColors.primaryDark} />
+                <Ionicons name="arrow-up-circle" size={14} color="#D32F2F" style={styles.iconBadgeOverlay} />
+              </View>
+              <Text style={styles.quickAccessLabel} numberOfLines={1}>Withdraw</Text>
+            </TouchableOpacity>
+
+            {/* Refer Button - Redirects to Car Qur'a Andazi Screen */}
+            <TouchableOpacity 
+              style={[styles.quickAccessCard, { width: (BANNER_WIDTH - 24) / 4 }]}
+              onPress={() => navigation.navigate('CarQuraAndaziScreen')}
+              activeOpacity={0.7}
+            >
+              <View style={styles.fancyIconWrapper}>
+                <MaterialCommunityIcons name="account-network" size={26} color={ThemeColors.primaryDark} />
+              </View>
+              <Text style={styles.quickAccessLabel} numberOfLines={1}>Refer</Text>
+            </TouchableOpacity>
+
+            {/* All Shops Button */}
+            <TouchableOpacity style={[styles.quickAccessCard, { width: (BANNER_WIDTH - 24) / 4 }]}>
+              <View style={styles.fancyIconWrapper}>
+                <MaterialCommunityIcons name="storefront" size={26} color={ThemeColors.primaryDark} />
+              </View>
+              <Text style={styles.quickAccessLabel} numberOfLines={1}>All Shops</Text>
             </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Video Banner Section */}
-        <View style={styles.videoBannerContainer}>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={handleVideoScroll}
-            scrollEventThrottle={16}
-            decelerationRate="fast"
-            snapToInterval={BANNER_WIDTH}
-            snapToAlignment="center"
-          >
-            <View style={styles.videoSlide}>
-              <VideoView
-                player={player1}
-                style={styles.videoPlayer}
-                fullscreenOptions={{ enable: true }}
-                allowsPictureInPicture
-              />
+          {/* Live Qur'a Andazi Banner */}
+          <TouchableOpacity style={styles.liveBanner}>
+            <View style={styles.liveBannerLeft}>
+              <View style={styles.liveImageContainer}>
+                <Image 
+                  source={require('../assets/Live.png')} 
+                  style={styles.liveIconImage} 
+                  resizeMode="cover" 
+                />
+              </View>
+              <View style={{ flex: 1, justifyContent: 'center' }}>
+                <Text style={styles.liveBannerTitle}>Live Qur'a Andazi</Text>
+                <Text style={styles.liveBannerSub} numberOfLines={1}>Draw results • Winners • New joiners</Text>
+              </View>
             </View>
-
-            <View style={styles.videoSlide}>
-              <VideoView
-                player={player2}
-                style={styles.videoPlayer}
-                fullscreenOptions={{ enable: true }}
-                allowsPictureInPicture
-              />
+            <View style={styles.arrowCircle}>
+              <Ionicons name="chevron-forward" size={18} color={ThemeColors.white} />
             </View>
-          </ScrollView>
-
-          <View style={styles.bannerDots}>
-            <View style={[styles.dot, activeVideoIndex === 0 && styles.activeDot]} />
-            <View style={[styles.dot, activeVideoIndex === 1 && styles.activeDot]} />
-          </View>
-        </View>
-
-        {/* Draw Stats Card */}
-        <View style={styles.statsCard}>
-          <View style={styles.statItem}>
-            <MaterialCommunityIcons name="calendar-clock" size={22} color={ThemeColors.primaryDark} />
-            <Text style={styles.statTitle}>Total Daily Draws</Text>
-            <Text style={styles.statValue}>1440</Text>
-            <Text style={styles.statSub}>After 4 Minutes</Text>
-          </View>
-
-          <View style={styles.statDivider} />
-
-          <View style={styles.statItem}>
-            <Ionicons name="people" size={22} color={ThemeColors.primaryDark} />
-            <Text style={styles.statTitle}>Active Programs</Text>
-            <Text style={styles.statValue}>4</Text>
-            <Text style={styles.statSub}>Running 24/7</Text>
-          </View>
-
-          <View style={styles.statDivider} />
-
-          <View style={styles.statItem}>
-            <Ionicons name="time-outline" size={22} color={ThemeColors.primaryDark} />
-            <Text style={styles.statTitle}>Draw Interval</Text>
-            <Text style={styles.statValue}>4</Text>
-            <Text style={styles.statSub}>Every 4 minutes</Text>
-          </View>
-        </View>
-
-        {/* Total Balance Card */}
-        <View style={styles.balanceCard}>
-          <View style={styles.fancyWalletWrapper}>
-            <Ionicons name="wallet" size={22} color={ThemeColors.primaryDark} />
-          </View>
-          <View style={styles.balanceTextContainer}>
-            <Text style={styles.balanceTitle}>Total Balance</Text>
-            <Text style={styles.balanceAmount}>PKR 0</Text>
-          </View>
-        </View>
-
-        {/* Quick Access Grid */}
-        <Text style={styles.sectionHeader}>Quick Access</Text>
-        <View style={styles.quickAccessRow}>
-          {/* Deposit Button */}
-          <TouchableOpacity 
-            style={styles.quickAccessCard}
-            onPress={() => navigation.navigate('DepositScreen')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.fancyIconWrapper}>
-              <MaterialCommunityIcons name="cash-plus" size={26} color={ThemeColors.primaryDark} />
-              <Ionicons name="arrow-down-circle" size={14} color="#2E7D32" style={styles.iconBadgeOverlay} />
-            </View>
-            <Text style={styles.quickAccessLabel} numberOfLines={1}>Deposit</Text>
           </TouchableOpacity>
 
-          {/* Withdraw Button */}
-          <TouchableOpacity 
-            style={styles.quickAccessCard}
-            onPress={() => navigation.navigate('WithdrawScreen')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.fancyIconWrapper}>
-              <MaterialCommunityIcons name="cash-minus" size={26} color={ThemeColors.primaryDark} />
-              <Ionicons name="arrow-up-circle" size={14} color="#D32F2F" style={styles.iconBadgeOverlay} />
+          {/* Programs Grid Section */}
+          <View style={styles.programHeaderRow}>
+            <Text style={styles.sectionHeader}>4 Programs - Draw Every 4 Minutes</Text>
+            <View style={styles.badgeContainer}>
+              <Text style={styles.badgeText}>1440 Draws/day</Text>
             </View>
-            <Text style={styles.quickAccessLabel} numberOfLines={1}>Withdraw</Text>
-          </TouchableOpacity>
+          </View>
 
-          {/* Refer Button */}
-          <TouchableOpacity style={styles.quickAccessCard}>
-            <View style={styles.fancyIconWrapper}>
-              <MaterialCommunityIcons name="account-network" size={26} color={ThemeColors.primaryDark} />
-            </View>
-            <Text style={styles.quickAccessLabel} numberOfLines={1}>Refer</Text>
-          </TouchableOpacity>
-
-          {/* All Shops Button */}
-          <TouchableOpacity style={styles.quickAccessCard}>
-            <View style={styles.fancyIconWrapper}>
-              <MaterialCommunityIcons name="storefront" size={26} color={ThemeColors.primaryDark} />
-            </View>
-            <Text style={styles.quickAccessLabel} numberOfLines={1}>All Shops</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Live Qur'a Andazi Banner */}
-        <TouchableOpacity style={styles.liveBanner}>
-          <View style={styles.liveBannerLeft}>
-            <View style={styles.liveImageContainer}>
+          <View style={styles.programGrid}>
+            <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardGreen, width: CARD_WIDTH }]}>
+              <Text style={styles.programTitle}>MemberShip Qur'a{'\n'}Andazi</Text>
               <Image 
-                source={require('../assets/Live.png')} 
-                style={styles.liveIconImage} 
-                resizeMode="cover" 
+                source={require('../assets/membership_qura_andazi.png')} 
+                style={styles.programIconImage} 
+                resizeMode="contain" 
               />
-            </View>
-            <View style={{ flex: 1, justifyContent: 'center' }}>
-              <Text style={styles.liveBannerTitle}>Live Qur'a Andazi</Text>
-              <Text style={styles.liveBannerSub} numberOfLines={1}>Draw results • Winners • New joiners</Text>
-            </View>
+            </TouchableOpacity>
+
+            {/* Car Qur'a Andazi Card with Navigation */}
+            <TouchableOpacity 
+              style={[styles.programCard, { backgroundColor: ThemeColors.cardBlue, width: CARD_WIDTH }]}
+              onPress={() => navigation.navigate('CarQuraAndaziScreen')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.programTitle}>Car Qur'a Andazi</Text>
+              <Image 
+                source={require('../assets/car.png')} 
+                style={styles.programIconImage} 
+                resizeMode="contain" 
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardBrown, width: CARD_WIDTH }]}>
+              <Text style={styles.programTitle}>Daily Qur'a Andazi</Text>
+              <Image 
+                source={require('../assets/coins.png')} 
+                style={styles.programIconImage} 
+                resizeMode="contain" 
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardPurple, width: CARD_WIDTH }]}>
+              <Text style={styles.programTitle}>Shopping Qur'a{'\n'}Andazi</Text>
+              <Image 
+                source={require('../assets/Gift.png')} 
+                style={styles.programIconImage} 
+                resizeMode="contain" 
+              />
+            </TouchableOpacity>
           </View>
-          <View style={styles.arrowCircle}>
-            <Ionicons name="chevron-forward" size={18} color={ThemeColors.white} />
-          </View>
-        </TouchableOpacity>
 
-        {/* Programs Grid Section */}
-        <View style={styles.programHeaderRow}>
-          <Text style={styles.sectionHeader}>4 Programs - Draw Every 4 Minutes</Text>
-          <View style={styles.badgeContainer}>
-            <Text style={styles.badgeText}>1440 Draws/day</Text>
-          </View>
-        </View>
-
-        <View style={styles.programGrid}>
-          <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardGreen }]}>
-            <Text style={styles.programTitle}>MemberShip Qur'a{'\n'}Andazi</Text>
-            <Image 
-              source={require('../assets/membership_qura_andazi.png')} 
-              style={styles.programIconImage} 
-              resizeMode="contain" 
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardBlue }]}>
-            <Text style={styles.programTitle}>Car Qur'a Andazi</Text>
-            <Image 
-              source={require('../assets/car.png')} 
-              style={styles.programIconImage} 
-              resizeMode="contain" 
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardBrown }]}>
-            <Text style={styles.programTitle}>Daily Qur'a Andazi</Text>
-            <Image 
-              source={require('../assets/coins.png')} 
-              style={styles.programIconImage} 
-              resizeMode="contain" 
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardPurple }]}>
-            <Text style={styles.programTitle}>Shopping Qur'a{'\n'}Andazi</Text>
-            <Image 
-              source={require('../assets/Gift.png')} 
-              style={styles.programIconImage} 
-              resizeMode="contain" 
-            />
-          </TouchableOpacity>
-        </View>
-
-      </ScrollView>
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -294,6 +306,13 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#054A29',
+    alignItems: 'center',
+  },
+  responsiveWrapper: {
+    flex: 1,
+    width: '100%',
+    alignSelf: 'center',
     backgroundColor: ThemeColors.screenBg,
   },
   scrollContent: {
@@ -343,7 +362,6 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   videoSlide: {
-    width: BANNER_WIDTH,
     height: 180,
   },
   videoPlayer: {
@@ -416,7 +434,6 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   quickAccessCard: {
-    width: (BANNER_WIDTH - 24) / 4,
     backgroundColor: ThemeColors.cardBg,
     borderRadius: 14,
     paddingVertical: 10,
@@ -499,7 +516,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   programCard: {
-    width: CARD_WIDTH,
     height: 140,
     borderRadius: 16,
     padding: 10,

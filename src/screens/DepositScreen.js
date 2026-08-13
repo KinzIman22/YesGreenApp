@@ -14,10 +14,10 @@ import {
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useResponsiveLayout } from '../utils/responsive'; // Import responsive helper
 
 const ThemeColors = {
   primaryDark: '#054A29',
-  screenBg: '#054A29',
   cardBg: '#FFFFFF',
   textDark: '#1A202C',
   textMuted: '#718096',
@@ -35,6 +35,8 @@ const ThemeColors = {
 const quickAmounts = ['100', '500', '1000', '2500', '5000', '10000'];
 
 const DepositScreen = ({ navigation }) => {
+  const { isMobile } = useResponsiveLayout();
+
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('jazzcash');
   const [senderName, setSenderName] = useState('');
@@ -43,7 +45,6 @@ const DepositScreen = ({ navigation }) => {
   const [note, setNote] = useState('');
   const [imageUri, setImageUri] = useState(null);
 
-  // Form Clear Functionality
   const resetForm = () => {
     setAmount('');
     setSelectedMethod('jazzcash');
@@ -52,6 +53,20 @@ const DepositScreen = ({ navigation }) => {
     setTransactionRef('');
     setNote('');
     setImageUri(null);
+  };
+
+  const showAlert = (title, message, onOk) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}: ${message}`);
+      if (onOk) onOk();
+    } else {
+      Alert.alert(
+        title,
+        message,
+        onOk ? [{ text: 'OK', onPress: onOk }] : [{ text: 'OK' }],
+        { cancelable: false }
+      );
+    }
   };
 
   const pickImage = async () => {
@@ -72,28 +87,22 @@ const DepositScreen = ({ navigation }) => {
 
   const handleSubmit = () => {
     if (!amount) {
-      Alert.alert('Error', 'Please enter an amount.');
+      showAlert('Error', 'Please enter an amount.');
       return;
     }
     if (!senderName) {
-      Alert.alert('Error', 'Please enter sender name.');
+      showAlert('Error', 'Please enter sender name.');
       return;
     }
     if (!transactionRef) {
-      Alert.alert('Error', 'Please enter transaction reference.');
+      showAlert('Error', 'Please enter transaction reference.');
       return;
     }
 
-    Alert.alert(
+    showAlert(
       'Success',
       'Payment request submitted successfully!',
-      [
-        {
-          text: 'OK',
-          onPress: () => resetForm(), // Clear all form inputs & screenshot on success
-        },
-      ],
-      { cancelable: false }
+      () => resetForm()
     );
   };
 
@@ -101,212 +110,209 @@ const DepositScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={ThemeColors.primaryDark} />
 
-      {/* Top Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation?.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={ThemeColors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add Money</Text>
-      </View>
-
-      {/* Main Scrollable Content */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.mainCard}>
-          
-          {/* Sub Header */}
-          <View style={styles.subHeaderRow}>
-            <View style={styles.walletIconBg}>
-              <Ionicons name="wallet-outline" size={22} color={ThemeColors.primaryDark} />
-            </View>
-            <View style={styles.subHeaderTexts}>
-              <Text style={styles.subTitle}>Manual Payment Request</Text>
-              <Text style={styles.subDesc}>Upload screenshot after payment</Text>
-            </View>
-          </View>
-
-          {/* Amount Input */}
-          <Text style={styles.label}>Amount</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter amount"
-              placeholderTextColor={ThemeColors.textMuted}
-              keyboardType="numeric"
-              value={amount}
-              onChangeText={setAmount}
-            />
-          </View>
-
-          {/* Quick Amounts Grid */}
-          <Text style={styles.label}>Quick Amount</Text>
-          <View style={styles.quickAmountGrid}>
-            {quickAmounts.map((item) => (
-              <View key={item} style={styles.chipWrapper}>
-                <TouchableOpacity
-                  style={[
-                    styles.quickAmountChip,
-                    amount === item && styles.quickAmountChipSelected,
-                  ]}
-                  onPress={() => setAmount(item)}
-                >
-                  <Text
-                    style={[
-                      styles.quickAmountText,
-                      amount === item && styles.quickAmountTextSelected,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    Rs. {item}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-
-          {/* Payment Method */}
-          <Text style={styles.label}>Payment Method</Text>
-
-          {/* JazzCash */}
-          <TouchableOpacity
-            style={[
-              styles.methodCard,
-              selectedMethod === 'jazzcash' && styles.methodCardSelected,
-            ]}
-            onPress={() => setSelectedMethod('jazzcash')}
-          >
-            <View style={styles.radioCircle}>
-              {selectedMethod === 'jazzcash' && <View style={styles.radioInner} />}
-            </View>
-            <Image source={require('../assets/Jazzcash.png')} style={styles.methodLogo} resizeMode="contain" />
-            <View style={styles.methodInfo}>
-              <Text style={styles.methodTitle}>JazzCash</Text>
-              <Text style={styles.methodNumber}>03017926802</Text>
-              <Text style={styles.methodCompany}>YesTime pvt LTD</Text>
-            </View>
+      <View style={styles.responsiveWrapper}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation?.goBack()}>
+            <Ionicons name="chevron-back" size={24} color={ThemeColors.white} />
           </TouchableOpacity>
-
-          {/* EasyPaisa */}
-          <TouchableOpacity
-            style={[
-              styles.methodCard,
-              selectedMethod === 'easypaisa' && styles.methodCardSelected,
-            ]}
-            onPress={() => setSelectedMethod('easypaisa')}
-          >
-            <View style={styles.radioCircle}>
-              {selectedMethod === 'easypaisa' && <View style={styles.radioInner} />}
-            </View>
-            <Image source={require('../assets/easypaisa.png')} style={styles.methodLogo} resizeMode="contain" />
-            <View style={styles.methodInfo}>
-              <Text style={styles.methodTitle}>Easypaisa</Text>
-              <Text style={styles.methodNumber}>03017926802</Text>
-              <Text style={styles.methodCompany}>YesTime pvt LTD</Text>
-            </View>
-          </TouchableOpacity>
-
-          {/* UBL Bank */}
-          <TouchableOpacity
-            style={[
-              styles.methodCard,
-              selectedMethod === 'ubl' && styles.methodCardSelected,
-            ]}
-            onPress={() => setSelectedMethod('ubl')}
-          >
-            <View style={styles.radioCircle}>
-              {selectedMethod === 'ubl' && <View style={styles.radioInner} />}
-            </View>
-            <Image source={require('../assets/UBL.png')} style={styles.methodLogo} resizeMode="contain" />
-            <View style={styles.methodInfo}>
-              <Text style={styles.methodTitle}>UBL Bank Transfer</Text>
-              <Text style={styles.methodNumber}>03017926802</Text>
-              <Text style={styles.methodCompany}>YesTime pvt LTD</Text>
-            </View>
-          </TouchableOpacity>
-
-          {/* Inputs */}
-          <Text style={styles.label}>Sender Name</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter sender name"
-              placeholderTextColor={ThemeColors.textMuted}
-              value={senderName}
-              onChangeText={setSenderName}
-            />
-          </View>
-
-          <Text style={styles.label}>Bank Name</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter bank name"
-              placeholderTextColor={ThemeColors.textMuted}
-              value={bankName}
-              onChangeText={setBankName}
-            />
-          </View>
-
-          <Text style={styles.label}>Transaction Reference (TILL ID)</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter transaction reference"
-              placeholderTextColor={ThemeColors.textMuted}
-              value={transactionRef}
-              onChangeText={setTransactionRef}
-            />
-          </View>
-
-          <Text style={styles.label}>Note (optional)</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Add any note"
-              placeholderTextColor={ThemeColors.textMuted}
-              value={note}
-              onChangeText={setNote}
-            />
-          </View>
-
-          {/* Image Picker */}
-          <Text style={styles.label}>Payment Screenshot</Text>
-          <TouchableOpacity style={styles.uploadBox} onPress={pickImage}>
-            {imageUri ? (
-              <Image source={{ uri: imageUri }} style={styles.uploadedImage} resizeMode="cover" />
-            ) : (
-              <>
-                <View style={styles.cloudIconBg}>
-                  <Ionicons name="cloud-upload-outline" size={26} color={ThemeColors.primaryDark} />
-                </View>
-                <Text style={styles.uploadTextTitle}>Tap to upload payment screenshot</Text>
-                <Text style={styles.uploadTextSub}>Gallery or Camera</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.imageActionRow}>
-            <TouchableOpacity style={styles.actionBtn} onPress={removeImage}>
-              <Feather name="trash-2" size={16} color={ThemeColors.textMuted} />
-              <Text style={styles.actionBtnText}>Remove</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionBtn} onPress={pickImage}>
-              <Ionicons name="folder-outline" size={16} color={ThemeColors.primaryDark} />
-              <Text style={[styles.actionBtnText, { color: ThemeColors.primaryDark }]}>Choose file</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Submit */}
-          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
-            <Text style={styles.submitBtnText}>Submit Payment Request</Text>
-          </TouchableOpacity>
-
+          <Text style={styles.headerTitle}>Add Money</Text>
         </View>
-      </ScrollView>
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={[styles.mainCard, !isMobile && styles.desktopCardBorder]}>
+            <View style={styles.subHeaderRow}>
+              <View style={styles.walletIconBg}>
+                <Ionicons name="wallet-outline" size={22} color={ThemeColors.primaryDark} />
+              </View>
+              <View style={styles.subHeaderTexts}>
+                <Text style={styles.subTitle}>Manual Payment Request</Text>
+                <Text style={styles.subDesc}>Upload screenshot after payment</Text>
+              </View>
+            </View>
+
+            <Text style={styles.label}>Amount</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter amount"
+                placeholderTextColor={ThemeColors.textMuted}
+                keyboardType="numeric"
+                value={amount}
+                onChangeText={setAmount}
+              />
+            </View>
+
+            <Text style={styles.label}>Quick Amount</Text>
+            <View style={styles.quickAmountGrid}>
+              {quickAmounts.map((item) => (
+                <View key={item} style={[styles.chipWrapper, !isMobile && { width: '16.66%' }]}>
+                  <TouchableOpacity
+                    style={[
+                      styles.quickAmountChip,
+                      amount === item && styles.quickAmountChipSelected,
+                    ]}
+                    onPress={() => setAmount(item)}
+                  >
+                    <Text
+                      style={[
+                        styles.quickAmountText,
+                        amount === item && styles.quickAmountTextSelected,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      Rs. {item}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+
+            <Text style={styles.label}>Payment Method</Text>
+
+            {/* JazzCash */}
+            <TouchableOpacity
+              style={[
+                styles.methodCard,
+                selectedMethod === 'jazzcash' && styles.methodCardSelected,
+              ]}
+              onPress={() => setSelectedMethod('jazzcash')}
+            >
+              <View style={styles.radioCircle}>
+                {selectedMethod === 'jazzcash' && <View style={styles.radioInner} />}
+              </View>
+              <Image source={require('../assets/Jazzcash.png')} style={styles.methodLogo} resizeMode="contain" />
+              <View style={styles.methodInfo}>
+                <Text style={styles.methodTitle}>JazzCash</Text>
+                <Text style={styles.methodNumber}>03017926802</Text>
+                <Text style={styles.methodCompany}>YesTime pvt LTD</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* EasyPaisa */}
+            <TouchableOpacity
+              style={[
+                styles.methodCard,
+                selectedMethod === 'easypaisa' && styles.methodCardSelected,
+              ]}
+              onPress={() => setSelectedMethod('easypaisa')}
+            >
+              <View style={styles.radioCircle}>
+                {selectedMethod === 'easypaisa' && <View style={styles.radioInner} />}
+              </View>
+              <Image source={require('../assets/easypaisa.png')} style={styles.methodLogo} resizeMode="contain" />
+              <View style={styles.methodInfo}>
+                <Text style={styles.methodTitle}>Easypaisa</Text>
+                <Text style={styles.methodNumber}>03017926802</Text>
+                <Text style={styles.methodCompany}>YesTime pvt LTD</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* UBL Bank */}
+            <TouchableOpacity
+              style={[
+                styles.methodCard,
+                selectedMethod === 'ubl' && styles.methodCardSelected,
+              ]}
+              onPress={() => setSelectedMethod('ubl')}
+            >
+              <View style={styles.radioCircle}>
+                {selectedMethod === 'ubl' && <View style={styles.radioInner} />}
+              </View>
+              <Image source={require('../assets/UBL.png')} style={styles.methodLogo} resizeMode="contain" />
+              <View style={styles.methodInfo}>
+                <Text style={styles.methodTitle}>UBL Bank Transfer</Text>
+                <Text style={styles.methodNumber}>03017926802</Text>
+                <Text style={styles.methodCompany}>YesTime pvt LTD</Text>
+              </View>
+            </TouchableOpacity>
+
+            <View style={!isMobile ? styles.rowGrid : null}>
+              <View style={!isMobile ? styles.colHalf : null}>
+                <Text style={styles.label}>Sender Name</Text>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Enter sender name"
+                    placeholderTextColor={ThemeColors.textMuted}
+                    value={senderName}
+                    onChangeText={setSenderName}
+                  />
+                </View>
+              </View>
+
+              <View style={!isMobile ? styles.colHalf : null}>
+                <Text style={styles.label}>Bank Name</Text>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Enter bank name"
+                    placeholderTextColor={ThemeColors.textMuted}
+                    value={bankName}
+                    onChangeText={setBankName}
+                  />
+                </View>
+              </View>
+            </View>
+
+            <Text style={styles.label}>Transaction Reference (TILL ID)</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter transaction reference"
+                placeholderTextColor={ThemeColors.textMuted}
+                value={transactionRef}
+                onChangeText={setTransactionRef}
+              />
+            </View>
+
+            <Text style={styles.label}>Note (optional)</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Add any note"
+                placeholderTextColor={ThemeColors.textMuted}
+                value={note}
+                onChangeText={setNote}
+              />
+            </View>
+
+            <Text style={styles.label}>Payment Screenshot</Text>
+            <TouchableOpacity style={styles.uploadBox} onPress={pickImage}>
+              {imageUri ? (
+                <Image source={{ uri: imageUri }} style={styles.uploadedImage} resizeMode="cover" />
+              ) : (
+                <>
+                  <View style={styles.cloudIconBg}>
+                    <Ionicons name="cloud-upload-outline" size={26} color={ThemeColors.primaryDark} />
+                  </View>
+                  <Text style={styles.uploadTextTitle}>Tap to upload payment screenshot</Text>
+                  <Text style={styles.uploadTextSub}>Gallery or Camera</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.imageActionRow}>
+              <TouchableOpacity style={styles.actionBtn} onPress={removeImage}>
+                <Feather name="trash-2" size={16} color={ThemeColors.textMuted} />
+                <Text style={styles.actionBtnText}>Remove</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionBtn} onPress={pickImage}>
+                <Ionicons name="folder-outline" size={16} color={ThemeColors.primaryDark} />
+                <Text style={[styles.actionBtnText, { color: ThemeColors.primaryDark }]}>Choose file</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
+              <Text style={styles.submitBtnText}>Submit Payment Request</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -316,11 +322,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: ThemeColors.primaryDark,
   },
+  responsiveWrapper: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 600,
+    alignSelf: 'center',
+    backgroundColor: ThemeColors.primaryDark,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? 12 : 6,
+    paddingTop: Platform.OS === 'android' ? 12 : 16,
     paddingBottom: 16,
   },
   backBtn: {
@@ -346,9 +359,14 @@ const styles = StyleSheet.create({
     backgroundColor: ThemeColors.cardBg,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 20,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 24,
+  },
+  desktopCardBorder: {
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    marginBottom: 20,
   },
   subHeaderRow: {
     flexDirection: 'row',
@@ -396,6 +414,13 @@ const styles = StyleSheet.create({
   textInput: {
     fontSize: 14,
     color: ThemeColors.textDark,
+  },
+  rowGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  colHalf: {
+    width: '48.5%',
   },
   quickAmountGrid: {
     flexDirection: 'row',

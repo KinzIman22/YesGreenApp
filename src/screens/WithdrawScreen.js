@@ -13,6 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useResponsiveLayout } from '../utils/responsive'; // Import responsive helper
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -34,6 +35,8 @@ const ThemeColors = {
 const quickAmounts = ['500', '1000', '2500', '5000', '10000', '25000'];
 
 const WithdrawScreen = ({ navigation }) => {
+  const { isMobile } = useResponsiveLayout();
+
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('jazzcash');
   const [accountTitle, setAccountTitle] = useState('');
@@ -50,30 +53,38 @@ const WithdrawScreen = ({ navigation }) => {
     setNote('');
   };
 
+  const showAlert = (title, message, onOk) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}: ${message}`);
+      if (onOk) onOk();
+    } else {
+      Alert.alert(
+        title,
+        message,
+        onOk ? [{ text: 'OK', onPress: onOk }] : [{ text: 'OK' }],
+        { cancelable: false }
+      );
+    }
+  };
+
   const handleSubmit = () => {
     if (!amount) {
-      Alert.alert('Error', 'Please enter withdrawal amount.');
+      showAlert('Error', 'Please enter withdrawal amount.');
       return;
     }
     if (!accountTitle) {
-      Alert.alert('Error', 'Please enter account holder name.');
+      showAlert('Error', 'Please enter account holder name.');
       return;
     }
     if (!accountNumber) {
-      Alert.alert('Error', 'Please enter account/mobile number.');
+      showAlert('Error', 'Please enter account/mobile number.');
       return;
     }
 
-    Alert.alert(
+    showAlert(
       'Success',
       'Withdrawal request submitted successfully!',
-      [
-        {
-          text: 'OK',
-          onPress: () => resetForm(),
-        },
-      ],
-      { cancelable: false }
+      () => resetForm()
     );
   };
 
@@ -81,180 +92,178 @@ const WithdrawScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={ThemeColors.primaryDark} />
 
-      {/* Top Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation?.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={ThemeColors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Withdraw</Text>
-      </View>
-
-      {/* Main Scrollable Content */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.mainCard}>
-          {/* Sub Header */}
-          <View style={styles.subHeaderRow}>
-            <View style={styles.walletIconBg}>
-              <Ionicons name="wallet-outline" size={22} color={ThemeColors.primaryDark} />
-            </View>
-            <View style={styles.subHeaderTexts}>
-              <Text style={styles.subTitle}>Withdrawal Request</Text>
-              <Text style={styles.subDesc}>Amount is debited immediately</Text>
-            </View>
-          </View>
-
-          {/* Amount Input */}
-          <Text style={styles.label}>Amount</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter amount"
-              placeholderTextColor={ThemeColors.textMuted}
-              keyboardType="numeric"
-              value={amount}
-              onChangeText={setAmount}
-            />
-          </View>
-
-          {/* Quick Amounts Grid */}
-          <Text style={styles.label}>Quick Amount</Text>
-          <View style={styles.quickAmountGrid}>
-            {quickAmounts.map((item) => (
-              <View key={item} style={styles.chipWrapper}>
-                <TouchableOpacity
-                  style={[
-                    styles.quickAmountChip,
-                    amount === item && styles.quickAmountChipSelected,
-                  ]}
-                  onPress={() => setAmount(item)}
-                >
-                  <Text
-                    style={[
-                      styles.quickAmountText,
-                      amount === item && styles.quickAmountTextSelected,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    Rs. {item}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-
-          {/* Withdrawal Method */}
-          <Text style={styles.label}>Withdrawal Method</Text>
-
-          {/* JazzCash */}
-          <TouchableOpacity
-            style={[
-              styles.methodCard,
-              selectedMethod === 'jazzcash' && styles.methodCardSelected,
-            ]}
-            onPress={() => setSelectedMethod('jazzcash')}
-          >
-            <View style={styles.radioCircle}>
-              {selectedMethod === 'jazzcash' && <View style={styles.radioInner} />}
-            </View>
-            <Image source={require('../assets/Jazzcash.png')} style={styles.methodLogo} resizeMode="contain" />
-            <Text style={styles.methodTitle}>Jazz Cash</Text>
+      <View style={styles.responsiveWrapper}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation?.goBack()}>
+            <Ionicons name="chevron-back" size={24} color={ThemeColors.white} />
           </TouchableOpacity>
-
-          {/* EasyPaisa */}
-          <TouchableOpacity
-            style={[
-              styles.methodCard,
-              selectedMethod === 'easypaisa' && styles.methodCardSelected,
-            ]}
-            onPress={() => setSelectedMethod('easypaisa')}
-          >
-            <View style={styles.radioCircle}>
-              {selectedMethod === 'easypaisa' && <View style={styles.radioInner} />}
-            </View>
-            <Image source={require('../assets/easypaisa.png')} style={styles.methodLogo} resizeMode="contain" />
-            <Text style={styles.methodTitle}>Easy Paisa</Text>
-          </TouchableOpacity>
-
-          {/* Bank Transfer */}
-          <TouchableOpacity
-            style={[
-              styles.methodCard,
-              selectedMethod === 'bank' && styles.methodCardSelected,
-            ]}
-            onPress={() => setSelectedMethod('bank')}
-          >
-            <View style={styles.radioCircle}>
-              {selectedMethod === 'bank' && <View style={styles.radioInner} />}
-            </View>
-            <Image source={require('../assets/UBL.png')} style={styles.methodLogo} resizeMode="contain" />
-            <Text style={styles.methodTitle}>Bank Transfer</Text>
-          </TouchableOpacity>
-
-          {/* Inputs */}
-          <Text style={styles.label}>Account Title</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter account holder name"
-              placeholderTextColor={ThemeColors.textMuted}
-              value={accountTitle}
-              onChangeText={setAccountTitle}
-            />
-          </View>
-
-          <Text style={styles.label}>Account Number</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter account / mobile number"
-              placeholderTextColor={ThemeColors.textMuted}
-              keyboardType="numeric"
-              value={accountNumber}
-              onChangeText={setAccountNumber}
-            />
-          </View>
-
-          <Text style={styles.label}>Bank Name (optional)</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="e.g. HBL, UBL, Meezan"
-              placeholderTextColor={ThemeColors.textMuted}
-              value={bankName}
-              onChangeText={setBankName}
-            />
-          </View>
-
-          <Text style={styles.label}>Note (optional)</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Any additional note"
-              placeholderTextColor={ThemeColors.textMuted}
-              value={note}
-              onChangeText={setNote}
-            />
-          </View>
-
-          {/* Notice Box */}
-          <View style={styles.noticeContainer}>
-            <Ionicons name="information-circle-outline" size={20} color={ThemeColors.noticeText} style={{ marginRight: 8 }} />
-            <Text style={styles.noticeText}>
-              Amount is debited immediately. If rejected by admin it will be refunded automatically.
-            </Text>
-          </View>
-
-          {/* Submit Button */}
-          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
-            <Text style={styles.submitBtnText}>Submit Withdrawal Request</Text>
-          </TouchableOpacity>
-
+          <Text style={styles.headerTitle}>Withdraw</Text>
         </View>
-      </ScrollView>
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={[styles.mainCard, !isMobile && styles.desktopCardBorder]}>
+            <View style={styles.subHeaderRow}>
+              <View style={styles.walletIconBg}>
+                <Ionicons name="wallet-outline" size={22} color={ThemeColors.primaryDark} />
+              </View>
+              <View style={styles.subHeaderTexts}>
+                <Text style={styles.subTitle}>Withdrawal Request</Text>
+                <Text style={styles.subDesc}>Amount is debited immediately</Text>
+              </View>
+            </View>
+
+            <Text style={styles.label}>Amount</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter amount"
+                placeholderTextColor={ThemeColors.textMuted}
+                keyboardType="numeric"
+                value={amount}
+                onChangeText={setAmount}
+              />
+            </View>
+
+            <Text style={styles.label}>Quick Amount</Text>
+            <View style={styles.quickAmountGrid}>
+              {quickAmounts.map((item) => (
+                <View key={item} style={[styles.chipWrapper, !isMobile && { width: '16.66%' }]}>
+                  <TouchableOpacity
+                    style={[
+                      styles.quickAmountChip,
+                      amount === item && styles.quickAmountChipSelected,
+                    ]}
+                    onPress={() => setAmount(item)}
+                  >
+                    <Text
+                      style={[
+                        styles.quickAmountText,
+                        amount === item && styles.quickAmountTextSelected,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      Rs. {item}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+
+            <Text style={styles.label}>Withdrawal Method</Text>
+
+            {/* JazzCash */}
+            <TouchableOpacity
+              style={[
+                styles.methodCard,
+                selectedMethod === 'jazzcash' && styles.methodCardSelected,
+              ]}
+              onPress={() => setSelectedMethod('jazzcash')}
+            >
+              <View style={styles.radioCircle}>
+                {selectedMethod === 'jazzcash' && <View style={styles.radioInner} />}
+              </View>
+              <Image source={require('../assets/Jazzcash.png')} style={styles.methodLogo} resizeMode="contain" />
+              <Text style={styles.methodTitle}>Jazz Cash</Text>
+            </TouchableOpacity>
+
+            {/* EasyPaisa */}
+            <TouchableOpacity
+              style={[
+                styles.methodCard,
+                selectedMethod === 'easypaisa' && styles.methodCardSelected,
+              ]}
+              onPress={() => setSelectedMethod('easypaisa')}
+            >
+              <View style={styles.radioCircle}>
+                {selectedMethod === 'easypaisa' && <View style={styles.radioInner} />}
+              </View>
+              <Image source={require('../assets/easypaisa.png')} style={styles.methodLogo} resizeMode="contain" />
+              <Text style={styles.methodTitle}>Easy Paisa</Text>
+            </TouchableOpacity>
+
+            {/* Bank Transfer */}
+            <TouchableOpacity
+              style={[
+                styles.methodCard,
+                selectedMethod === 'bank' && styles.methodCardSelected,
+              ]}
+              onPress={() => setSelectedMethod('bank')}
+            >
+              <View style={styles.radioCircle}>
+                {selectedMethod === 'bank' && <View style={styles.radioInner} />}
+              </View>
+              <Image source={require('../assets/UBL.png')} style={styles.methodLogo} resizeMode="contain" />
+              <Text style={styles.methodTitle}>Bank Transfer</Text>
+            </TouchableOpacity>
+
+            <View style={!isMobile ? styles.rowGrid : null}>
+              <View style={!isMobile ? styles.colHalf : null}>
+                <Text style={styles.label}>Account Title</Text>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Enter account holder name"
+                    placeholderTextColor={ThemeColors.textMuted}
+                    value={accountTitle}
+                    onChangeText={setAccountTitle}
+                  />
+                </View>
+              </View>
+
+              <View style={!isMobile ? styles.colHalf : null}>
+                <Text style={styles.label}>Account Number</Text>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Enter account / mobile number"
+                    placeholderTextColor={ThemeColors.textMuted}
+                    keyboardType="numeric"
+                    value={accountNumber}
+                    onChangeText={setAccountNumber}
+                  />
+                </View>
+              </View>
+            </View>
+
+            <Text style={styles.label}>Bank Name (optional)</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="e.g. HBL, UBL, Meezan"
+                placeholderTextColor={ThemeColors.textMuted}
+                value={bankName}
+                onChangeText={setBankName}
+              />
+            </View>
+
+            <Text style={styles.label}>Note (optional)</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Any additional note"
+                placeholderTextColor={ThemeColors.textMuted}
+                value={note}
+                onChangeText={setNote}
+              />
+            </View>
+
+            <View style={styles.noticeContainer}>
+              <Ionicons name="information-circle-outline" size={20} color={ThemeColors.noticeText} style={{ marginRight: 8 }} />
+              <Text style={styles.noticeText}>
+                Amount is debited immediately. If rejected by admin it will be refunded automatically.
+              </Text>
+            </View>
+
+            <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
+              <Text style={styles.submitBtnText}>Submit Withdrawal Request</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -264,11 +273,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: ThemeColors.primaryDark,
   },
+  responsiveWrapper: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 600,
+    alignSelf: 'center',
+    backgroundColor: ThemeColors.primaryDark,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? 12 : 6,
+    paddingTop: Platform.OS === 'android' ? 12 : 16,
     paddingBottom: 16,
   },
   backBtn: {
@@ -294,9 +310,14 @@ const styles = StyleSheet.create({
     backgroundColor: ThemeColors.cardBg,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 20,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 24,
+  },
+  desktopCardBorder: {
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    marginBottom: 20,
   },
   subHeaderRow: {
     flexDirection: 'row',
@@ -344,6 +365,13 @@ const styles = StyleSheet.create({
   textInput: {
     fontSize: 14,
     color: ThemeColors.textDark,
+  },
+  rowGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  colHalf: {
+    width: '48.5%',
   },
   quickAmountGrid: {
     flexDirection: 'row',
