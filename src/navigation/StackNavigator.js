@@ -11,6 +11,9 @@ import ForgotPasswordScreen from '../screens/ForgetPasswordScreen';
 import DepositScreen from '../screens/DepositScreen';
 import WithdrawScreen from '../screens/WithdrawScreen';
 import CarQuraAndaziScreen from '../screens/CarQuraAndaziScreen';
+import PublicShopDirectoryScreen from '../screens/PublicShopDirectoryScreen';
+import LiveQuraAndaziDashboardScreen from '../screens/LiveQuraAndaziDashboardScreen';
+import MembershipQurAndaziScreen from '../screens/MembershipQurAndaziScreen';
 
 // Import Tab Navigator (jo HomeScreen, Wallet, etc. ko hold karta hai)
 import TabNavigator from './TabNavigator';
@@ -34,7 +37,14 @@ export default function StackNavigator() {
         
         {/* Car Qura Andazi Screen */}
         <Stack.Screen name="CarQuraAndaziScreen" component={CarQuraAndaziScreen} />
-        
+       <Stack.Screen name="PublicShopDirectoryScreen" component={PublicShopDirectoryScreen} />
+
+       <Stack.Screen name="LiveQuraAndaziDashboardScreen" component={LiveQuraAndaziDashboardScreen} />
+        <Stack.Screen 
+  name="MembershipQurAndazi" 
+  component={MembershipQurAndaziScreen} 
+  options={{ headerShown: false }} 
+/>
       </Stack.Navigator>
     </NavigationContainer>
   );

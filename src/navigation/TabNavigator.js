@@ -1,27 +1,27 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text } from 'react-native';
+import { View, Text, Platform } from 'react-native';
 
 // Import Screens
-import HomeScreen from '../screens/HomeScreen'; // Same screen created above
+import HomeScreen from '../screens/HomeScreen';
 
 // Placeholder screens for other tabs
 const WalletScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text>Wallet Screen</Text>
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F4F7F5' }}>
+    <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1A202C' }}>Wallet Screen</Text>
   </View>
 );
 
 const NotificationScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text>Notification Screen</Text>
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F4F7F5' }}>
+    <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1A202C' }}>Notification Screen</Text>
   </View>
 );
 
 const ProfileScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text>Profile Screen</Text>
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F4F7F5' }}>
+    <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1A202C' }}>Profile Screen</Text>
   </View>
 );
 
@@ -35,8 +35,8 @@ const TabNavigator = () => {
         tabBarActiveTintColor: '#054A29',
         tabBarInactiveTintColor: '#A0AEC0',
         tabBarStyle: {
-          height: 60,
-          paddingBottom: 8,
+          height: Platform.OS === 'web' ? 65 : 60,
+          paddingBottom: Platform.OS === 'web' ? 10 : 8,
           paddingTop: 6,
           backgroundColor: '#FFFFFF',
           borderTopWidth: 0,
@@ -45,6 +45,11 @@ const TabNavigator = () => {
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.05,
           shadowRadius: 4,
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          ...(Platform.OS === 'web' ? { position: 'fixed', width: '100%' } : {}),
         },
         tabBarLabelStyle: {
           fontSize: 11,

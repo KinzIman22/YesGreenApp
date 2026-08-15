@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { useResponsiveLayout } from '../utils/responsive'; // Import responsive helper
+import { useResponsiveLayout } from '../utils/responsive';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -24,7 +24,6 @@ const ThemeColors = {
   balanceCardBg: '#054A29',
   bannerGreen: '#054A29',
   
-  // Program Cards Colors
   cardGreen: '#0B522C',
   cardBlue: '#1A4D8C',
   cardBrown: '#94380B',
@@ -39,7 +38,6 @@ const HomeScreen = ({ navigation }) => {
   const [lang, setLang] = useState('EN');
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
 
-  // Dynamic banner & card width calculations based on current screen layout
   const BANNER_WIDTH = containerMaxWidth === '100%' ? width - 32 : containerMaxWidth - 32;
   const CARD_WIDTH = (BANNER_WIDTH - 12) / 2;
 
@@ -179,7 +177,6 @@ const HomeScreen = ({ navigation }) => {
           {/* Quick Access Grid */}
           <Text style={styles.sectionHeader}>Quick Access</Text>
           <View style={styles.quickAccessRow}>
-            {/* Deposit Button */}
             <TouchableOpacity 
               style={[styles.quickAccessCard, { width: (BANNER_WIDTH - 24) / 4 }]}
               onPress={() => navigation.navigate('DepositScreen')}
@@ -192,7 +189,6 @@ const HomeScreen = ({ navigation }) => {
               <Text style={styles.quickAccessLabel} numberOfLines={1}>Deposit</Text>
             </TouchableOpacity>
 
-            {/* Withdraw Button */}
             <TouchableOpacity 
               style={[styles.quickAccessCard, { width: (BANNER_WIDTH - 24) / 4 }]}
               onPress={() => navigation.navigate('WithdrawScreen')}
@@ -205,7 +201,6 @@ const HomeScreen = ({ navigation }) => {
               <Text style={styles.quickAccessLabel} numberOfLines={1}>Withdraw</Text>
             </TouchableOpacity>
 
-            {/* Refer Button - Redirects to Car Qur'a Andazi Screen */}
             <TouchableOpacity 
               style={[styles.quickAccessCard, { width: (BANNER_WIDTH - 24) / 4 }]}
               onPress={() => navigation.navigate('CarQuraAndaziScreen')}
@@ -217,8 +212,18 @@ const HomeScreen = ({ navigation }) => {
               <Text style={styles.quickAccessLabel} numberOfLines={1}>Refer</Text>
             </TouchableOpacity>
 
-            {/* All Shops Button */}
-            <TouchableOpacity style={[styles.quickAccessCard, { width: (BANNER_WIDTH - 24) / 4 }]}>
+          <TouchableOpacity 
+              style={[styles.quickAccessCard, { width: (BANNER_WIDTH - 24) / 4 }]}
+              onPress={() => {
+                // Agar tab navigator ke andar hain toh parent navigator use karein
+                if (navigation.getParent()) {
+                  navigation.getParent().navigate('PublicShopDirectoryScreen');
+                } else {
+                  navigation.navigate('PublicShopDirectoryScreen');
+                }
+              }}
+              activeOpacity={0.7}
+            >
               <View style={styles.fancyIconWrapper}>
                 <MaterialCommunityIcons name="storefront" size={26} color={ThemeColors.primaryDark} />
               </View>
@@ -227,24 +232,29 @@ const HomeScreen = ({ navigation }) => {
           </View>
 
           {/* Live Qur'a Andazi Banner */}
-          <TouchableOpacity style={styles.liveBanner}>
-            <View style={styles.liveBannerLeft}>
-              <View style={styles.liveImageContainer}>
-                <Image 
-                  source={require('../assets/Live.png')} 
-                  style={styles.liveIconImage} 
-                  resizeMode="cover" 
-                />
-              </View>
-              <View style={{ flex: 1, justifyContent: 'center' }}>
-                <Text style={styles.liveBannerTitle}>Live Qur'a Andazi</Text>
-                <Text style={styles.liveBannerSub} numberOfLines={1}>Draw results • Winners • New joiners</Text>
-              </View>
-            </View>
-            <View style={styles.arrowCircle}>
-              <Ionicons name="chevron-forward" size={18} color={ThemeColors.white} />
-            </View>
-          </TouchableOpacity>
+          {/* Live Qur'a Andazi Banner */}
+<TouchableOpacity 
+  style={styles.liveBanner}
+  onPress={() => navigation.navigate('LiveQuraAndaziDashboardScreen')}
+  activeOpacity={0.8}
+>
+  <View style={styles.liveBannerLeft}>
+    <View style={styles.liveImageContainer}>
+      <Image 
+        source={require('../assets/Live.png')} 
+        style={styles.liveIconImage} 
+        resizeMode="cover" 
+      />
+    </View>
+    <View style={{ flex: 1, justifyContent: 'center' }}>
+      <Text style={styles.liveBannerTitle}>Live Qur'a Andazi</Text>
+      <Text style={styles.liveBannerSub} numberOfLines={1}>Draw results • Winners • New joiners</Text>
+    </View>
+  </View>
+  <View style={styles.arrowCircle}>
+    <Ionicons name="chevron-forward" size={18} color={ThemeColors.white} />
+  </View>
+</TouchableOpacity>
 
           {/* Programs Grid Section */}
           <View style={styles.programHeaderRow}>
@@ -255,7 +265,11 @@ const HomeScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.programGrid}>
-            <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardGreen, width: CARD_WIDTH }]}>
+            <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardGreen, width: CARD_WIDTH }]}
+             onPress={() => navigation.navigate('MembershipQurAndazi')}
+              activeOpacity={0.8}
+            
+            >
               <Text style={styles.programTitle}>MemberShip Qur'a{'\n'}Andazi</Text>
               <Image 
                 source={require('../assets/membership_qura_andazi.png')} 
@@ -264,7 +278,6 @@ const HomeScreen = ({ navigation }) => {
               />
             </TouchableOpacity>
 
-            {/* Car Qur'a Andazi Card with Navigation */}
             <TouchableOpacity 
               style={[styles.programCard, { backgroundColor: ThemeColors.cardBlue, width: CARD_WIDTH }]}
               onPress={() => navigation.navigate('CarQuraAndaziScreen')}
@@ -314,14 +327,13 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
     backgroundColor: ThemeColors.screenBg,
+    minHeight: '100%',
   },
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 10,
-    paddingBottom: 24,
+    paddingBottom: 180, // Updated padding for perfect spacing
   },
-
-  /* Header */
   topHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -351,8 +363,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  /* Video Banner */
   videoBannerContainer: {
     height: 180,
     backgroundColor: '#000000',
@@ -361,13 +371,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     position: 'relative',
   },
-  videoSlide: {
-    height: 180,
-  },
-  videoPlayer: {
-    width: '100%',
-    height: '100%',
-  },
+  videoSlide: { height: 180 },
+  videoPlayer: { width: '100%', height: '100%' },
   bannerDots: {
     position: 'absolute',
     bottom: 10,
@@ -382,8 +387,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 3,
   },
   activeDot: { backgroundColor: ThemeColors.primaryDark, width: 16 },
-
-  /* Stats Card */
   statsCard: {
     flexDirection: 'row',
     backgroundColor: ThemeColors.cardBg,
@@ -402,8 +405,6 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 15, fontWeight: 'bold', color: ThemeColors.textDark, marginVertical: 2 },
   statSub: { fontSize: 9, fontWeight: '600', color: ThemeColors.textMuted, textAlign: 'center' },
   statDivider: { width: 1, backgroundColor: ThemeColors.dividerDark, height: '70%', alignSelf: 'center' },
-
-  /* Total Balance Section */
   balanceCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -425,8 +426,6 @@ const styles = StyleSheet.create({
   balanceTextContainer: { justifyContent: 'center' },
   balanceTitle: { fontSize: 12, color: '#E2E8F0', fontWeight: '500' },
   balanceAmount: { fontSize: 16, fontWeight: 'bold', color: ThemeColors.white, marginTop: 2 },
-
-  /* Quick Access Section */
   sectionHeader: { fontSize: 13, fontWeight: 'bold', color: ThemeColors.textDark, marginBottom: 10 },
   quickAccessRow: {
     flexDirection: 'row',
@@ -461,8 +460,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   quickAccessLabel: { fontSize: 10, fontWeight: 'bold', color: ThemeColors.textDark, marginTop: 6, textAlign: 'center' },
-
-  /* Live Banner */
   liveBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -481,10 +478,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
     backgroundColor: '#FFFFFF',
   },
-  liveIconImage: {
-    width: '100%',
-    height: '100%',
-  },
+  liveIconImage: { width: '100%', height: '100%' },
   liveBannerTitle: { fontSize: 13, fontWeight: 'bold', color: ThemeColors.white },
   liveBannerSub: { fontSize: 10, color: '#E2E8F0', fontWeight: '500', marginTop: 1 },
   arrowCircle: {
@@ -495,8 +489,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  /* Program Grid */
   programHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
