@@ -105,7 +105,7 @@ export default function MembershipQurAndaziScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#004D25',
+    backgroundColor: '#fafafa',
   },
   header: {
     flexDirection: 'row',

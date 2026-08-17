@@ -14,9 +14,18 @@ import CarQuraAndaziScreen from '../screens/CarQuraAndaziScreen';
 import PublicShopDirectoryScreen from '../screens/PublicShopDirectoryScreen';
 import LiveQuraAndaziDashboardScreen from '../screens/LiveQuraAndaziDashboardScreen';
 import MembershipQurAndaziScreen from '../screens/MembershipQurAndaziScreen';
-
+import GameQurAndaziScreen from '../screens/GameQurAndaziScreen';
+import ShoppingQurAndaziScreen from '../screens/ShoppingQurAndaziScreen';
+import CarPlansScreen from '../screens/CarPlansScreen'; // Apne folder path ke mutabiq adjust kar lein
 // Import Tab Navigator (jo HomeScreen, Wallet, etc. ko hold karta hai)
 import TabNavigator from './TabNavigator';
+import CarPlanDetailScreen from '../screens/CarPLanDetailScreen';
+import ShoppingQurAndaziDashboardScreen from '../screens/ShoppingQurAndaziDashboardScreen';
+import NotificationsScreen from '../screens/NotificationsScreen'; 
+import TransactionsScreen from '../screens/TransactionsScreen';
+import WalletScreen from '../screens/WalletScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import UpdateProfileScreen from '../screens/UpdateProfileScreen'; // Path apne project structure ke mutabiq adjust kar lein
 
 const Stack = createNativeStackNavigator();
 
@@ -43,6 +52,45 @@ export default function StackNavigator() {
         <Stack.Screen 
   name="MembershipQurAndazi" 
   component={MembershipQurAndaziScreen} 
+  options={{ headerShown: false }} 
+/>
+
+<Stack.Screen name="GameQurAndaziScreen" component={GameQurAndaziScreen} />
+<Stack.Screen name="ShoppingQurAndaziScreen" component={ShoppingQurAndaziScreen} />
+<Stack.Screen 
+  name="CarPlansScreen" 
+  component={CarPlansScreen} 
+  options={{ headerShown: false }} 
+/>
+<Stack.Screen 
+  name="WalletScreen" 
+  component={WalletScreen} 
+  options={{ headerShown: false }} 
+/>
+
+
+<Stack.Screen 
+  name="CarPlanDetailScreen" 
+  component={CarPlanDetailScreen} 
+  options={{ headerShown: false }} 
+/>
+
+<Stack.Screen name="ShoppingQurAndaziDashboardScreen" component={ShoppingQurAndaziDashboardScreen} />
+
+<Stack.Screen 
+  name="Transactions" 
+  component={TransactionsScreen} 
+  options={{ headerShown: false }} 
+/>
+ <Stack.Screen name="ProfileScreen"
+ component={ProfileScreen}
+ options={{headerShown:false}}
+
+ />
+
+ <Stack.Screen 
+  name="UpdateProfile" 
+  component={UpdateProfileScreen} 
   options={{ headerShown: false }} 
 />
       </Stack.Navigator>

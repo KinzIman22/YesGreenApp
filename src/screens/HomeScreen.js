@@ -12,6 +12,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useResponsiveLayout } from '../utils/responsive';
+import ErrorScreen from '../components/ErrorScreen';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -291,7 +292,17 @@ const HomeScreen = ({ navigation }) => {
               />
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardBrown, width: CARD_WIDTH }]}>
+            <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardBrown, width: CARD_WIDTH }]}
+               onPress={() => {
+  if (navigation.getParent()) {
+    navigation.getParent().navigate('GameQurAndaziScreen');
+  } else {
+    navigation.navigate('GameQurAndaziScreen');
+  }
+}}
+                activeOpacity={0.8}
+            
+            >
               <Text style={styles.programTitle}>Daily Qur'a Andazi</Text>
               <Image 
                 source={require('../assets/coins.png')} 
@@ -300,14 +311,25 @@ const HomeScreen = ({ navigation }) => {
               />
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardPurple, width: CARD_WIDTH }]}>
-              <Text style={styles.programTitle}>Shopping Qur'a{'\n'}Andazi</Text>
-              <Image 
-                source={require('../assets/Gift.png')} 
-                style={styles.programIconImage} 
-                resizeMode="contain" 
-              />
-            </TouchableOpacity>
+           <TouchableOpacity 
+  style={[styles.programCard, { backgroundColor: '#4A148C', width: CARD_WIDTH }]}
+onPress={() => {
+  // Direct root navigator ya available navigation object se navigate karein
+  try {
+    navigation.navigate('ShoppingQurAndaziScreen');
+  } catch (error) {
+    navigation.getParent()?.navigate('ShoppingQurAndaziScreen');
+  }
+}}
+  activeOpacity={0.8}
+>
+  <Text style={styles.programTitle}>Shopping Qur'a Andazi</Text>
+  <Image 
+    source={require('../assets/Gift.png')} 
+    style={styles.programIconImage} 
+    resizeMode="contain" 
+  />
+</TouchableOpacity>
           </View>
 
         </ScrollView>

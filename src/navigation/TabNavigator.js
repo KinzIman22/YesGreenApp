@@ -5,25 +5,11 @@ import { View, Text, Platform } from 'react-native';
 
 // Import Screens
 import HomeScreen from '../screens/HomeScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import WalletScreen from '../screens/WalletScreen';
 
-// Placeholder screens for other tabs
-const WalletScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F4F7F5' }}>
-    <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1A202C' }}>Wallet Screen</Text>
-  </View>
-);
+import ProfileScreen from '../screens/ProfileScreen';
 
-const NotificationScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F4F7F5' }}>
-    <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1A202C' }}>Notification Screen</Text>
-  </View>
-);
-
-const ProfileScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F4F7F5' }}>
-    <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1A202C' }}>Profile Screen</Text>
-  </View>
-);
 
 const Tab = createBottomTabNavigator();
 
@@ -35,21 +21,32 @@ const TabNavigator = () => {
         tabBarActiveTintColor: '#054A29',
         tabBarInactiveTintColor: '#A0AEC0',
         tabBarStyle: {
-          height: Platform.OS === 'web' ? 65 : 60,
-          paddingBottom: Platform.OS === 'web' ? 10 : 8,
+          height: Platform.OS === 'web' ? 60 : 60,
+          paddingBottom: Platform.OS === 'web' ? 8 : 6,
           paddingTop: 6,
           backgroundColor: '#FFFFFF',
-          borderTopWidth: 0,
+          borderTopWidth: 1,
+          borderTopColor: '#EDF2F7',
           elevation: 10,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.05,
           shadowRadius: 4,
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          ...(Platform.OS === 'web' ? { position: 'fixed', width: '100%' } : {}),
+          ...(Platform.OS === 'web'
+            ? {
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                width: '100%',
+                zIndex: 1000,
+              }
+            : {
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                bottom: 0,
+              }),
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -74,7 +71,7 @@ const TabNavigator = () => {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Wallet" component={WalletScreen} />
-      <Tab.Screen name="Notification" component={NotificationScreen} />
+      <Tab.Screen name="Notification" component={NotificationsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

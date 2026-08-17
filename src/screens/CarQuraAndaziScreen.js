@@ -75,8 +75,12 @@ const CarQuraAndaziScreen = ({ navigation }) => {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           
-          {/* View Live Qur'a Andazi Banner */}
-          <TouchableOpacity style={[styles.liveBanner, { width: CONTAINER_WIDTH }]}>
+          {/* View Live Qur'a Andazi Banner - Connected to CarPlansScreen */}
+          <TouchableOpacity 
+            style={[styles.liveBanner, { width: CONTAINER_WIDTH }]}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('CarPlansScreen')}
+          >
             <View style={styles.liveBannerLeft}>
               <View style={styles.playIconCircle}>
                 <Ionicons name="play" size={16} color={ThemeColors.white} />
@@ -225,7 +229,7 @@ const CarQuraAndaziScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#123D78', // Background matching top theme for web side gaps
+    backgroundColor: '#123D78',
     alignItems: 'center',
   },
   responsiveWrapper: {
@@ -377,7 +381,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#D4AF37', // Gold border tint matching images
+    borderColor: '#D4AF37',
     alignItems: 'center',
     justifyContent: 'center',
   },
