@@ -119,26 +119,27 @@ export default function ProfileScreen({ navigation, route }) {
 
             <View style={styles.divider} />
 
-          <TouchableOpacity 
-  style={styles.menuRow} 
-  activeOpacity={0.7}
-  onPress={() => navigation.navigate('UpdateProfile')}
->
-  <View style={styles.menuIconBoxGreen}>
-    <Feather name="edit-2" size={16} color="#2F855A" />
-  </View>
-  <View style={styles.menuTextContainer}>
-    <Text style={styles.menuTitle}>Update Profile</Text>
-    <Text style={styles.menuSubtitle}>Change your name, email or photo</Text>
-  </View>
-  <Ionicons name="chevron-forward" size={18} color="#A0AEC0" />
-</TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.menuRow} 
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('UpdateProfile')}
+            >
+              <View style={styles.menuIconBoxGreen}>
+                <Feather name="edit-2" size={16} color="#2F855A" />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>Update Profile</Text>
+                <Text style={styles.menuSubtitle}>Change your name, email or photo</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#A0AEC0" />
+            </TouchableOpacity>
 
             <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.menuRow} activeOpacity={0.7}
-            
-            onPress={() => navigation.navigate('ChangePasswordScreen')}
+            <TouchableOpacity 
+              style={styles.menuRow} 
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('ChangePasswordScreen')}
             >
               <View style={styles.menuIconBoxBlue}>
                 <Ionicons name="lock-closed-outline" size={16} color="#3182CE" />
@@ -149,6 +150,24 @@ export default function ProfileScreen({ navigation, route }) {
               </View>
               <Ionicons name="chevron-forward" size={18} color="#A0AEC0" />
             </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            <TouchableOpacity 
+              style={styles.menuRow} 
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('RegisterShopScreen')}
+            >
+              <View style={styles.menuIconBoxStore}>
+                <Ionicons name="storefront-outline" size={16} color="#D69E2E" />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>Register Shop</Text>
+                <Text style={styles.menuSubtitle}>Start selling on the platform</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#A0AEC0" />
+            </TouchableOpacity>
+
           </View>
 
           {/* Language Selection Card */}
@@ -192,9 +211,10 @@ export default function ProfileScreen({ navigation, route }) {
               <Text style={styles.sectionHeaderTitle}>Support & Legal</Text>
             </View>
 
-            <TouchableOpacity style={styles.menuRow} activeOpacity={0.7}
-            
-            onPress={() => navigation.navigate('HelpCenterScreen')}
+            <TouchableOpacity 
+              style={styles.menuRow} 
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('HelpCenterScreen')}
             >
               <View style={styles.menuIconBoxLightPurple}>
                 <Ionicons name="help-circle-outline" size={18} color="#805AD5" />
@@ -208,8 +228,10 @@ export default function ProfileScreen({ navigation, route }) {
 
             <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.menuRow} activeOpacity={0.7}
-           onPress={() => navigation.navigate('PrivacyPolicyScreen')}
+            <TouchableOpacity 
+              style={styles.menuRow} 
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('PrivacyPolicyScreen')}
             >
               <View style={styles.menuIconBoxLightBlue}>
                 <Ionicons name="shield-outline" size={18} color="#3182CE" />
@@ -223,8 +245,10 @@ export default function ProfileScreen({ navigation, route }) {
 
             <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.menuRow} activeOpacity={0.7}
-            onPress={() => navigation.navigate('TermsConditions')}
+            <TouchableOpacity 
+              style={styles.menuRow} 
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('TermsConditions')}
             >
               <View style={styles.menuIconBoxNavy}>
                 <MaterialCommunityIcons name="file-document-outline" size={18} color="#2C5282" />
@@ -244,9 +268,10 @@ export default function ProfileScreen({ navigation, route }) {
           </TouchableOpacity>
 
           {/* Delete Account Button */}
-          <TouchableOpacity style={styles.deleteAccountBtn} activeOpacity={0.8}
-   
-          onPress={() => navigation.navigate('DeleteAccountScreen', { userData })}
+          <TouchableOpacity 
+            style={styles.deleteAccountBtn} 
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('DeleteAccountScreen', { userData })}
           >
             <Ionicons name="trash-outline" size={20} color="#E53E3E" style={{ marginRight: 8 }} />
             <Text style={styles.deleteAccountText}>Delete Account</Text>
@@ -265,20 +290,16 @@ export default function ProfileScreen({ navigation, route }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             
-            {/* Top Shield Icon */}
             <View style={styles.modalIconBox}>
               <Ionicons name="shield-checkmark" size={28} color="#DD6B20" />
             </View>
 
-            {/* Title */}
             <Text style={styles.modalTitle}>Phone Verified</Text>
 
-            {/* Description */}
             <Text style={styles.modalDescription}>
               Your phone number is not verified yet. Please complete phone verification to secure your account and enable all features.
             </Text>
 
-            {/* OK Button */}
             <TouchableOpacity 
               style={styles.modalOkBtn} 
               activeOpacity={0.85}
@@ -463,6 +484,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 14,
   },
+  menuIconBoxStore: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#FEFCBF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
   menuIconBoxLightPurple: {
     width: 40,
     height: 40,
@@ -568,7 +598,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#E53E3E',
   },
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -34,16 +34,24 @@ const ThemeColors = {
 
 const quickAmounts = ['100', '500', '1000', '2500', '5000', '10000'];
 
-const DepositScreen = ({ navigation }) => {
+const DepositScreen = ({ navigation, route }) => {
   const { isMobile } = useResponsiveLayout();
 
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(
+    route?.params?.amount ? String(route.params.amount) : ''
+  );
   const [selectedMethod, setSelectedMethod] = useState('jazzcash');
   const [senderName, setSenderName] = useState('');
   const [bankName, setBankName] = useState('');
   const [transactionRef, setTransactionRef] = useState('');
   const [note, setNote] = useState('');
   const [imageUri, setImageUri] = useState(null);
+
+  useEffect(() => {
+    if (route?.params?.amount) {
+      setAmount(String(route.params.amount));
+    }
+  }, [route?.params?.amount]);
 
   const resetForm = () => {
     setAmount('');

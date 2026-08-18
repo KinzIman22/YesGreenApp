@@ -25,7 +25,6 @@ export default function WalletScreen({ navigation }) {
   const { width, containerMaxWidth } = useResponsiveLayout();
   const screenWidth = Dimensions.get('window').width;
   
-  // Responsive card and container width handling for mobile, tablet & web
   const isConstrained = containerMaxWidth !== '100%';
   const maxContentWidth = isConstrained ? containerMaxWidth : screenWidth;
   const horizontalPadding = screenWidth > 768 ? 24 : 16;
@@ -34,7 +33,7 @@ export default function WalletScreen({ navigation }) {
   const [selectedFilter, setSelectedFilter] = useState('History');
   const filters = ['History', 'Deposits', 'Withdrawals'];
 
-  const quickAmounts = ['PKR 100', 'PKR 500', 'PKR 1000', 'PKR 2500', 'PKR 5000', 'PKR 10000'];
+  const quickAmounts = ['100', '500', '1000', '2500', '5000', '10000'];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -73,14 +72,23 @@ export default function WalletScreen({ navigation }) {
 
               {/* Deposit / Withdraw Action Buttons */}
               <View style={styles.actionButtonsRow}>
-                <TouchableOpacity style={styles.actionBtnWhite} activeOpacity={0.8}>
+                <TouchableOpacity style={styles.actionBtnWhite} activeOpacity={0.8}
+                  onPress={() => {
+                    const rootNav = navigation.getParent() || navigation;
+                    rootNav.navigate('DepositScreen');
+                  }}
+                >
                   <View style={styles.actionIconCircle}>
                     <Ionicons name="add" size={16} color={ThemeColors.primaryDark} />
                   </View>
                   <Text style={styles.actionBtnTextDark}>Deposit</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionBtnWhite} activeOpacity={0.8}>
+                <TouchableOpacity style={styles.actionBtnWhite} activeOpacity={0.8}
+                   onPress={() => {
+                     const rootNav = navigation.getParent() || navigation;
+                     rootNav.navigate('WithdrawScreen');
+                   }}>
                   <View style={[styles.actionIconCircle, { backgroundColor: '#FFF5F5' }]}>
                     <Ionicons name="remove" size={16} color="#E53E3E" />
                   </View>
@@ -94,8 +102,16 @@ export default function WalletScreen({ navigation }) {
               <Text style={styles.sectionHeaderTitle}>Quick Top-Up</Text>
               <View style={styles.quickGrid}>
                 {quickAmounts.map((amt, idx) => (
-                  <TouchableOpacity key={idx} style={styles.quickAmountBtn} activeOpacity={0.7}>
-                    <Text style={styles.quickAmountText} numberOfLines={1}>{amt}</Text>
+                  <TouchableOpacity 
+                    key={idx} 
+                    style={styles.quickAmountBtn} 
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      const rootNav = navigation.getParent() || navigation;
+                      rootNav.navigate('DepositScreen', { amount: amt });
+                    }}
+                  >
+                    <Text style={styles.quickAmountText} numberOfLines={1}>PKR {amt}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -106,13 +122,13 @@ export default function WalletScreen({ navigation }) {
               <View style={styles.transactionsHeaderRow}>
                 <Text style={styles.sectionHeaderTitle}>Recent Transactions</Text>
                <TouchableOpacity 
-  style={styles.viewAllBtn} 
-  onPress={() => navigation.navigate('Transactions')}
-  activeOpacity={0.7}
->
-  <Text style={styles.viewAllText}>View All</Text>
-  <Ionicons name="chevron-forward" size={12} color={ThemeColors.primaryDark} />
-</TouchableOpacity>
+                  style={styles.viewAllBtn} 
+                  onPress={() => navigation.navigate('Transactions')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.viewAllText}>View All</Text>
+                  <Ionicons name="chevron-forward" size={12} color={ThemeColors.primaryDark} />
+                </TouchableOpacity>
               </View>
 
               {/* Filter Chips */}
@@ -165,7 +181,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingTop: 18,
-    paddingBottom: 85, // Safe bottom padding so content doesn't hide behind the tab bar
+    paddingBottom: 85,
     minHeight: '100%',
   },
   scrollInnerWrapper: {
@@ -276,7 +292,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   quickAmountBtn: {
-    width: '31.5%', // Perfectly fits 3 items per row without overflow on small screens
+    width: '31.5%',
     backgroundColor: '#F7FAFC',
     borderWidth: 1,
     borderColor: '#E2E8F0',

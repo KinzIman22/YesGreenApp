@@ -7,11 +7,13 @@ import {
   StatusBar,
   ScrollView,
   TouchableOpacity,
-  Clipboard,
   Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { useResponsiveLayout } from '../utils/responsive';
+import { useNavigation } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native'; // Ensure ye imported ho
 
 const ThemeColors = {
   primaryDark: '#2C1250',
@@ -47,8 +49,8 @@ export default function ShoppingQurAndaziDashboardScreen({ navigation }) {
 
   const cashbackCoupon = "807761";
 
-  const copyToClipboard = () => {
-    Clipboard.setString(cashbackCoupon);
+  const copyToClipboard = async () => {
+    await Clipboard.setStringAsync(cashbackCoupon);
     Alert.alert("Success", "Cashback coupon number copied to clipboard!");
   };
 
@@ -161,7 +163,13 @@ export default function ShoppingQurAndaziDashboardScreen({ navigation }) {
 
               <View style={styles.gridContainer}>
                 {/* Registered Shops */}
-                <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuGreen, width: GRID_CARD_WIDTH }]}>
+                <TouchableOpacity 
+                  style={[styles.menuCard, { backgroundColor: ThemeColors.menuGreen, width: GRID_CARD_WIDTH }]}
+                  onPress={() => {
+                    const rootNav = navigation.getParent() || navigation;
+                    rootNav.navigate('PublicShopDirectoryScreen');
+                  }}
+                >
                   <View style={styles.menuIconBox}>
                     <Ionicons name="storefront" size={22} color={ThemeColors.white} />
                   </View>
@@ -172,7 +180,13 @@ export default function ShoppingQurAndaziDashboardScreen({ navigation }) {
                 </TouchableOpacity>
 
                 {/* My Shopping */}
-                <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuBlue, width: GRID_CARD_WIDTH }]}>
+                <TouchableOpacity 
+                  style={[styles.menuCard, { backgroundColor: ThemeColors.menuBlue, width: GRID_CARD_WIDTH }]}
+                  onPress={() => {
+                    const rootNav = navigation.getParent() || navigation;
+                    rootNav.navigate('MyShopScreen');
+                  }}
+                >
                   <View style={styles.menuIconBox}>
                     <Ionicons name="receipt-outline" size={22} color={ThemeColors.white} />
                   </View>
@@ -194,15 +208,31 @@ export default function ShoppingQurAndaziDashboardScreen({ navigation }) {
                 </TouchableOpacity>
 
                 {/* My Savings */}
-                <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuOrange, width: GRID_CARD_WIDTH }]}>
-                  <View style={styles.menuIconBox}>
-                    <MaterialCommunityIcons name="chart-box-outline" size={22} color={ThemeColors.white} />
-                  </View>
-                  <View>
-                    <Text style={styles.menuCardTitle}>My savings</Text>
-                    <Text style={styles.menuCardSub}>Balance & levels</Text>
-                  </View>
-                </TouchableOpacity>
+              <TouchableOpacity 
+  style={[styles.menuCard, { backgroundColor: ThemeColors.menuOrange, width: GRID_CARD_WIDTH }]}
+  onPress={() => {
+    try {
+      // Pehle direct navigate karne ki koshish karein
+      navigation.navigate('MySavingsScreen');
+    } catch (e) {
+      // Agar fail ho toh parent ya root ke zariye try karein
+      const parent = navigation.getParent();
+      if (parent) {
+        parent.navigate('MySavingsScreen');
+      } else {
+        console.log("Navigation error: ", e);
+      }
+    }
+  }}
+>
+  <View style={styles.menuIconBox}>
+    <MaterialCommunityIcons name="chart-box-outline" size={22} color={ThemeColors.white} />
+  </View>
+  <View>
+    <Text style={styles.menuCardTitle}>My savings</Text>
+    <Text style={styles.menuCardSub}>Balance & levels</Text>
+  </View>
+</TouchableOpacity>
 
                 {/* Recent Draws */}
                 <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuPurpleDark, width: GRID_CARD_WIDTH }]}>
@@ -216,7 +246,10 @@ export default function ShoppingQurAndaziDashboardScreen({ navigation }) {
                 </TouchableOpacity>
 
                 {/* My Winning Draws */}
-                <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuPink, width: GRID_CARD_WIDTH }]}>
+                <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuPink, width: GRID_CARD_WIDTH }]}
+onPress={() => navigation.navigate('MyPrizesScreen')}
+                
+                >
                   <View style={styles.menuIconBox}>
                     <Ionicons name="trophy-outline" size={22} color={ThemeColors.white} />
                   </View>
@@ -227,7 +260,11 @@ export default function ShoppingQurAndaziDashboardScreen({ navigation }) {
                 </TouchableOpacity>
 
                 {/* Permanent Coupons */}
-                <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuPurpleDark, width: GRID_CARD_WIDTH }]}>
+                <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuPurpleDark, width: GRID_CARD_WIDTH }]}
+                
+                onPress={() => navigation.navigate('PermanentCouponeScreen')}
+                
+                >
                   <View style={styles.menuIconBox}>
                     <MaterialCommunityIcons name="ticket-percent-outline" size={22} color={ThemeColors.white} />
                   </View>
