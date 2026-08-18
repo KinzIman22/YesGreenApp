@@ -116,7 +116,7 @@ export default function MySavingsScreen({ navigation }) {
 
             {/* Level Commitment Section (Clickable) */}
             <TouchableOpacity 
-              style={[styles.sectionContainer, { width: CONTAINER_WIDTH }]}
+              style={[styles.levelTouchableCard, { width: CONTAINER_WIDTH }]}
               onPress={() => navigation.navigate('LevelCommitmentScreen')}
               activeOpacity={0.7}
             >
@@ -124,6 +124,7 @@ export default function MySavingsScreen({ navigation }) {
                 <Ionicons name="grid-outline" size={18} color={ThemeColors.purplePrimary} style={{ marginRight: 8 }} />
                 <Text style={styles.purpleSectionTitle}>Level commitment</Text>
               </View>
+              <Ionicons name="chevron-forward" size={18} color={ThemeColors.textMuted} />
             </TouchableOpacity>
 
           </View>
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
   },
   sectionContainer: {
     alignSelf: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -201,11 +202,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: ThemeColors.textDark,
-  },
-  purpleSectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: ThemeColors.purplePrimary,
   },
   statsCardContainer: {
     backgroundColor: ThemeColors.cardBg,
@@ -247,9 +243,30 @@ const styles = StyleSheet.create({
     color: ThemeColors.textMuted,
     marginTop: 1,
   },
+  levelTouchableCard: {
+    backgroundColor: ThemeColors.cardBg,
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    alignSelf: 'center',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
   levelSectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+  },
+  purpleSectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: ThemeColors.purplePrimary,
   },
 });

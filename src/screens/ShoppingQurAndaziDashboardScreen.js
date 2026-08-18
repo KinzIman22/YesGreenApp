@@ -197,7 +197,10 @@ export default function ShoppingQurAndaziDashboardScreen({ navigation }) {
                 </TouchableOpacity>
 
                 {/* Level Table */}
-                <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuPurpleDark, width: GRID_CARD_WIDTH }]}>
+                <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuPurpleDark, width: GRID_CARD_WIDTH }]}
+                onPress={() => navigation.navigate('LevelCommitmentScreen')}
+                
+                >
                   <View style={styles.menuIconBox}>
                     <MaterialCommunityIcons name="view-grid" size={22} color={ThemeColors.white} />
                   </View>

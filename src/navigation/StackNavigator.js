@@ -36,6 +36,7 @@ import MySavingsScreen from '../screens/MySavingsScreen';
 import MyPrizesScreen from '../screens/MyPrizesScreen';
 import PermanentCouponeScreen from '../screens/PermanentCouponeScreen';
 import RecentDrawsScreen from '../screens/RecentDrawsScreen';
+import LevelCommitmentScreen from '../screens/LevelCommitmentScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -147,6 +148,8 @@ export default function StackNavigator() {
 
         <Stack.Screen name="PermanentCouponeScreen" component={PermanentCouponeScreen} />
         <Stack.Screen name="RecentDrawsScreen" component={RecentDrawsScreen} />
+
+        <Stack.Screen name="LevelCommitmentScreen" component={LevelCommitmentScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
