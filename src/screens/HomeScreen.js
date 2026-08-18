@@ -93,7 +93,10 @@ const HomeScreen = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity style={styles.profileAvatar}>
+              <TouchableOpacity style={styles.profileAvatar}
+              
+       onPress={() => navigation.navigate('TabNavigator', { screen: 'Profile' })}
+          >
                 <Ionicons name="person" size={20} color={ThemeColors.white} />
               </TouchableOpacity>
             </View>

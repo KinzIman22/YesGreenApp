@@ -136,7 +136,10 @@ export default function ProfileScreen({ navigation, route }) {
 
             <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.menuRow} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.menuRow} activeOpacity={0.7}
+            
+            onPress={() => navigation.navigate('ChangePasswordScreen')}
+            >
               <View style={styles.menuIconBoxBlue}>
                 <Ionicons name="lock-closed-outline" size={16} color="#3182CE" />
               </View>
@@ -189,7 +192,10 @@ export default function ProfileScreen({ navigation, route }) {
               <Text style={styles.sectionHeaderTitle}>Support & Legal</Text>
             </View>
 
-            <TouchableOpacity style={styles.menuRow} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.menuRow} activeOpacity={0.7}
+            
+            onPress={() => navigation.navigate('HelpCenterScreen')}
+            >
               <View style={styles.menuIconBoxLightPurple}>
                 <Ionicons name="help-circle-outline" size={18} color="#805AD5" />
               </View>
@@ -202,7 +208,9 @@ export default function ProfileScreen({ navigation, route }) {
 
             <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.menuRow} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.menuRow} activeOpacity={0.7}
+           onPress={() => navigation.navigate('PrivacyPolicyScreen')}
+            >
               <View style={styles.menuIconBoxLightBlue}>
                 <Ionicons name="shield-outline" size={18} color="#3182CE" />
               </View>
@@ -215,7 +223,9 @@ export default function ProfileScreen({ navigation, route }) {
 
             <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.menuRow} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.menuRow} activeOpacity={0.7}
+            onPress={() => navigation.navigate('TermsConditions')}
+            >
               <View style={styles.menuIconBoxNavy}>
                 <MaterialCommunityIcons name="file-document-outline" size={18} color="#2C5282" />
               </View>
@@ -234,7 +244,10 @@ export default function ProfileScreen({ navigation, route }) {
           </TouchableOpacity>
 
           {/* Delete Account Button */}
-          <TouchableOpacity style={styles.deleteAccountBtn} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.deleteAccountBtn} activeOpacity={0.8}
+   
+          onPress={() => navigation.navigate('DeleteAccountScreen', { userData })}
+          >
             <Ionicons name="trash-outline" size={20} color="#E53E3E" style={{ marginRight: 8 }} />
             <Text style={styles.deleteAccountText}>Delete Account</Text>
           </TouchableOpacity>

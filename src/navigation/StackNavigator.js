@@ -25,7 +25,14 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
 import WalletScreen from '../screens/WalletScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import UpdateProfileScreen from '../screens/UpdateProfileScreen'; // Path apne project structure ke mutabiq adjust kar lein
+import UpdateProfileScreen from '../screens/UpdateProfileScreen'; 
+import TermsConditionsScreen from '../screens/TermsConditionsScreen';
+import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
+import HelpCenterScreen from '../screens/HelpCenterScreen';
+import ChangePasswordScreen from '../screens/ChangePasswordScreen';
+import DeleteAccountScreen from '../screens/DeleteAccountScreen';
+
+// Path apne project structure ke mutabiq adjust kar lein
 
 const Stack = createNativeStackNavigator();
 
@@ -91,6 +98,35 @@ export default function StackNavigator() {
  <Stack.Screen 
   name="UpdateProfile" 
   component={UpdateProfileScreen} 
+  options={{ headerShown: false }} 
+/>
+
+<Stack.Screen 
+  name="TermsConditions" 
+  component={TermsConditionsScreen} 
+  options={{ headerShown: false }} 
+/>
+
+
+<Stack.Screen 
+  name="PrivacyPolicyScreen" 
+  component={PrivacyPolicyScreen} 
+  options={{ headerShown: false }} 
+/>
+
+<Stack.Screen 
+  name="HelpCenterScreen" 
+  component={HelpCenterScreen} 
+  options={{ headerShown: false }} 
+/>
+<Stack.Screen 
+          name="ChangePasswordScreen" 
+          component={ChangePasswordScreen} 
+          options={{ headerShown: false }} 
+        />
+<Stack.Screen 
+  name="DeleteAccountScreen" 
+  component={DeleteAccountScreen} 
   options={{ headerShown: false }} 
 />
       </Stack.Navigator>
