@@ -35,6 +35,7 @@ import MyShopScreen from '../screens/MyShopScreen';
 import MySavingsScreen from '../screens/MySavingsScreen';
 import MyPrizesScreen from '../screens/MyPrizesScreen';
 import PermanentCouponeScreen from '../screens/PermanentCouponeScreen';
+import RecentDrawsScreen from '../screens/RecentDrawsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -145,6 +146,7 @@ export default function StackNavigator() {
        <Stack.Screen name="MyPrizesScreen" component={MyPrizesScreen} />
 
         <Stack.Screen name="PermanentCouponeScreen" component={PermanentCouponeScreen} />
+        <Stack.Screen name="RecentDrawsScreen" component={RecentDrawsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

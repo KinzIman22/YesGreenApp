@@ -235,7 +235,10 @@ export default function ShoppingQurAndaziDashboardScreen({ navigation }) {
 </TouchableOpacity>
 
                 {/* Recent Draws */}
-                <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuPurpleDark, width: GRID_CARD_WIDTH }]}>
+                <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuPurpleDark, width: GRID_CARD_WIDTH }]}
+                onPress={() => navigation.navigate('RecentDrawsScreen')}
+                
+                >
                   <View style={styles.menuIconBox}>
                     <Ionicons name="time-outline" size={22} color={ThemeColors.white} />
                   </View>
