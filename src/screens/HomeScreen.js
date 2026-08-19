@@ -94,8 +94,7 @@ const HomeScreen = ({ navigation }) => {
               </View>
 
               <TouchableOpacity style={styles.profileAvatar}
-              
-       onPress={() => navigation.navigate('TabNavigator', { screen: 'Profile' })}
+         onPress={() => navigation.navigate('TabNavigator', { screen: 'Profile' })}
           >
                 <Ionicons name="person" size={20} color={ThemeColors.white} />
               </TouchableOpacity>
@@ -216,10 +215,9 @@ const HomeScreen = ({ navigation }) => {
               <Text style={styles.quickAccessLabel} numberOfLines={1}>Refer</Text>
             </TouchableOpacity>
 
-          <TouchableOpacity 
+            <TouchableOpacity 
               style={[styles.quickAccessCard, { width: (BANNER_WIDTH - 24) / 4 }]}
               onPress={() => {
-                // Agar tab navigator ke andar hain toh parent navigator use karein
                 if (navigation.getParent()) {
                   navigation.getParent().navigate('PublicShopDirectoryScreen');
                 } else {
@@ -236,29 +234,28 @@ const HomeScreen = ({ navigation }) => {
           </View>
 
           {/* Live Qur'a Andazi Banner */}
-          {/* Live Qur'a Andazi Banner */}
-<TouchableOpacity 
-  style={styles.liveBanner}
-  onPress={() => navigation.navigate('LiveQuraAndaziDashboardScreen')}
-  activeOpacity={0.8}
->
-  <View style={styles.liveBannerLeft}>
-    <View style={styles.liveImageContainer}>
-      <Image 
-        source={require('../assets/Live.png')} 
-        style={styles.liveIconImage} 
-        resizeMode="cover" 
-      />
-    </View>
-    <View style={{ flex: 1, justifyContent: 'center' }}>
-      <Text style={styles.liveBannerTitle}>Live Qur'a Andazi</Text>
-      <Text style={styles.liveBannerSub} numberOfLines={1}>Draw results • Winners • New joiners</Text>
-    </View>
-  </View>
-  <View style={styles.arrowCircle}>
-    <Ionicons name="chevron-forward" size={18} color={ThemeColors.white} />
-  </View>
-</TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.liveBanner}
+            onPress={() => navigation.navigate('LiveQuraAndaziDashboardScreen')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.liveBannerLeft}>
+              <View style={styles.liveImageContainer}>
+                <Image 
+                  source={require('../assets/Live.png')} 
+                  style={styles.liveIconImage} 
+                  resizeMode="cover" 
+                />
+              </View>
+              <View style={{ flex: 1, justifyContent: 'center' }}>
+                <Text style={styles.liveBannerTitle}>Live Qur'a Andazi</Text>
+                <Text style={styles.liveBannerSub} numberOfLines={1}>Draw results • Winners • New joiners</Text>
+              </View>
+            </View>
+            <View style={styles.arrowCircle}>
+              <Ionicons name="chevron-forward" size={18} color={ThemeColors.white} />
+            </View>
+          </TouchableOpacity>
 
           {/* Programs Grid Section */}
           <View style={styles.programHeaderRow}>
@@ -270,9 +267,8 @@ const HomeScreen = ({ navigation }) => {
 
           <View style={styles.programGrid}>
             <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardGreen, width: CARD_WIDTH }]}
-             onPress={() => navigation.navigate('MembershipQurAndazi')}
-              activeOpacity={0.8}
-            
+               onPress={() => navigation.navigate('MembershipQurAndazi')}
+               activeOpacity={0.8}
             >
               <Text style={styles.programTitle}>MemberShip Qur'a{'\n'}Andazi</Text>
               <Image 
@@ -297,14 +293,13 @@ const HomeScreen = ({ navigation }) => {
 
             <TouchableOpacity style={[styles.programCard, { backgroundColor: ThemeColors.cardBrown, width: CARD_WIDTH }]}
                onPress={() => {
-  if (navigation.getParent()) {
-    navigation.getParent().navigate('GameQurAndaziScreen');
-  } else {
-    navigation.navigate('GameQurAndaziScreen');
-  }
-}}
-                activeOpacity={0.8}
-            
+                if (navigation.getParent()) {
+                  navigation.getParent().navigate('GameQurAndaziScreen');
+                } else {
+                  navigation.navigate('GameQurAndaziScreen');
+                }
+              }}
+               activeOpacity={0.8}
             >
               <Text style={styles.programTitle}>Daily Qur'a Andazi</Text>
               <Image 
@@ -314,25 +309,24 @@ const HomeScreen = ({ navigation }) => {
               />
             </TouchableOpacity>
 
-           <TouchableOpacity 
-  style={[styles.programCard, { backgroundColor: '#4A148C', width: CARD_WIDTH }]}
-onPress={() => {
-  // Direct root navigator ya available navigation object se navigate karein
-  try {
-    navigation.navigate('ShoppingQurAndaziScreen');
-  } catch (error) {
-    navigation.getParent()?.navigate('ShoppingQurAndaziScreen');
-  }
-}}
-  activeOpacity={0.8}
->
-  <Text style={styles.programTitle}>Shopping Qur'a Andazi</Text>
-  <Image 
-    source={require('../assets/Gift.png')} 
-    style={styles.programIconImage} 
-    resizeMode="contain" 
-  />
-</TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.programCard, { backgroundColor: '#4A148C', width: CARD_WIDTH }]}
+              onPress={() => {
+                try {
+                  navigation.navigate('ShoppingQurAndaziScreen');
+                } catch (error) {
+                  navigation.getParent()?.navigate('ShoppingQurAndaziScreen');
+                }
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.programTitle}>Shopping Qur'a Andazi</Text>
+              <Image 
+                source={require('../assets/Gift.png')} 
+                style={styles.programIconImage} 
+                resizeMode="contain" 
+              />
+            </TouchableOpacity>
           </View>
 
         </ScrollView>
@@ -357,7 +351,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 10,
-    paddingBottom: 180, // Updated padding for perfect spacing
+    paddingBottom: 50, // Increase kiya gaya hai taaki last cards clearly scroll hokar poore nazar aayein
   },
   topHeader: {
     flexDirection: 'row',

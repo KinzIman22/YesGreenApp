@@ -81,7 +81,10 @@ export default function ShoppingQurAndaziDashboardScreen({ navigation }) {
           <View style={styles.scrollInnerWrapper}>
             
             {/* View Live Qur'a Andazi Banner */}
-            <TouchableOpacity style={[styles.liveBanner, { width: CONTAINER_WIDTH }]}>
+            <TouchableOpacity style={[styles.liveBanner, { width: CONTAINER_WIDTH }]}
+            onPress={() => navigation.navigate('LiveDrawScreen')}
+            
+            >
               <View style={styles.liveBannerLeft}>
                 <View style={styles.playIconCircle}>
                   <Ionicons name="play" size={16} color={ThemeColors.white} />

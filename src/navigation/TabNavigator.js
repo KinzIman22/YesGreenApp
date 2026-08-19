@@ -7,9 +7,7 @@ import { View, Text, Platform } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import WalletScreen from '../screens/WalletScreen';
-
 import ProfileScreen from '../screens/ProfileScreen';
-
 
 const Tab = createBottomTabNavigator();
 
@@ -21,9 +19,9 @@ const TabNavigator = () => {
         tabBarActiveTintColor: '#054A29',
         tabBarInactiveTintColor: '#A0AEC0',
         tabBarStyle: {
-          height: Platform.OS === 'web' ? 60 : 60,
-          paddingBottom: Platform.OS === 'web' ? 8 : 6,
-          paddingTop: 6,
+          height: Platform.OS === 'web' ? 65 : 60,
+          paddingBottom: 5,
+          paddingTop: 5,
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#EDF2F7',
@@ -48,9 +46,16 @@ const TabNavigator = () => {
                 bottom: 0,
               }),
         },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          paddingTop: 4,
+        },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: 'bold',
+          marginTop: -2,
+          marginBottom: 2,
+          includeFontPadding: false, // Android par text cut hone se bachane ke liye
         },
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
@@ -65,7 +70,7 @@ const TabNavigator = () => {
             iconName = focused ? 'person' : 'person-outline';
           }
 
-          return <Ionicons name={iconName} size={22} color={color} />;
+          return <Ionicons name={iconName} size={20} color={color} />;
         },
       })}
     >
