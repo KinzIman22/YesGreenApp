@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { forgotPassword } from '../api/authApi';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -39,7 +40,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendResetCode = () => {
+  const handleSendResetCode = async () => {
     if (!email.trim()) {
       Alert.alert('Validation Error', 'Please enter your email address.');
       return;
@@ -51,8 +52,12 @@ const ForgotPasswordScreen = ({ navigation }) => {
       return;
     }
 
-    setIsLoading(true);
-    setTimeout(() => {
+    try {
+      setIsLoading(true);
+
+      // Real backend call - /auth/forgot-password
+      await forgotPassword({ email: email.trim() });
+
       setIsLoading(false);
       Alert.alert(
         'Reset Code Sent',
@@ -64,7 +69,11 @@ const ForgotPasswordScreen = ({ navigation }) => {
           },
         ]
       );
-    }, 1200);
+    } catch (error) {
+      setIsLoading(false);
+      const errorMsg = error.response?.data?.message || 'Failed to send reset code. Please try again.';
+      Alert.alert('Error', Array.isArray(errorMsg) ? errorMsg[0] : errorMsg);
+    }
   };
 
   return (

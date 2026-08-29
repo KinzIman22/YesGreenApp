@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, Image, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, Image, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useResponsiveLayout } from '../utils/responsive';
+import { joinCarPlan } from '../api/apiService'; // Make sure this function exists in apiService
 
 const ThemeColors = {
   screenBg: '#F4F6F9',
@@ -17,6 +18,7 @@ const ThemeColors = {
 export default function CarPlanDetailScreen({ route, navigation }) {
   const { containerMaxWidth } = useResponsiveLayout();
   const { plan } = route.params || { 
+    id: '1',
     title: 'Plan 1', 
     price: '30 لاکھ', 
     totalAmount: 'PKR 3,000,000',
@@ -25,6 +27,41 @@ export default function CarPlanDetailScreen({ route, navigation }) {
 
   const [referralCode1, setReferralCode1] = useState('');
   const [referralCode2, setReferralCode2] = useState('');
+  const [loadingType, setLoadingType] = useState(null); // 'qurandazi' or 'installments'
+
+  const handleJoinPlan = async (joinType) => {
+    try {
+      const isQurandazi = joinType === 'qurandazi';
+      const refCode = isQurandazi ? referralCode1 : referralCode2;
+
+      setLoadingType(joinType);
+
+      // Payload structure for API
+      const payload = {
+        plan_id: plan.id || plan._id,
+        join_type: joinType, // e.g. 'qurandazi' or 'installments'
+        referral_code: refCode.trim(),
+      };
+
+      const response = await joinCarPlan(payload);
+
+      Alert.alert(
+        "Success", 
+        response?.message || "Successfully joined the car plan!",
+        [
+          { 
+            text: "OK", 
+            onPress: () => navigation.navigate('CarQuraAndaziScreen') 
+          }
+        ]
+      );
+    } catch (error) {
+      console.log('Error joining car plan:', error);
+      Alert.alert("Error", error?.response?.data?.message || error?.message || "Failed to join plan. Please try again.");
+    } finally {
+      setLoadingType(null);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -63,17 +100,17 @@ export default function CarPlanDetailScreen({ route, navigation }) {
             <View style={styles.statsRow}>
               <View style={styles.statBox}>
                 <Text style={styles.statTitle}>Total amount</Text>
-                <Text style={styles.statValue}>{plan.totalAmount || 'PKR 3,000,000'}</Text>
+                <Text style={styles.statValue}>{plan.totalAmount || plan.price || 'PKR 3,000,000'}</Text>
               </View>
 
               <View style={styles.statBox}>
                 <Text style={styles.statTitle}>Threshold</Text>
-                <Text style={styles.statValue}>PKR 547,500</Text>
+                <Text style={styles.statValue}>{plan.threshold || 'PKR 547,500'}</Text>
               </View>
 
               <View style={styles.statBox}>
                 <Text style={styles.statTitle}>Post-win monthly</Text>
-                <Text style={styles.statValue}>PKR 36,000</Text>
+                <Text style={styles.statValue}>{plan.postWinMonthly || 'PKR 36,000'}</Text>
               </View>
             </View>
 
@@ -83,10 +120,20 @@ export default function CarPlanDetailScreen({ route, navigation }) {
               placeholderTextColor="#94A3B8"
               value={referralCode1}
               onChangeText={setReferralCode1}
+              autoCapitalize="none"
             />
 
-            <TouchableOpacity style={styles.actionButton} activeOpacity={0.85}>
-              <Text style={styles.actionButtonText}>Join With Qur'andazi</Text>
+            <TouchableOpacity 
+              style={[styles.actionButton, loadingType === 'qurandazi' && { opacity: 0.7 }]} 
+              activeOpacity={0.85}
+              disabled={loadingType !== null}
+              onPress={() => handleJoinPlan('qurandazi')}
+            >
+              {loadingType === 'qurandazi' ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.actionButtonText}>Join With Qur'andazi</Text>
+              )}
             </TouchableOpacity>
 
             <Text style={styles.descriptionText}>
@@ -108,17 +155,17 @@ export default function CarPlanDetailScreen({ route, navigation }) {
             <View style={styles.statsRow}>
               <View style={styles.statBox}>
                 <Text style={styles.statTitle}>Total amount</Text>
-                <Text style={styles.statValue}>{plan.totalAmount || 'PKR 3,000,000'}</Text>
+                <Text style={styles.statValue}>{plan.totalAmount || plan.price || 'PKR 3,000,000'}</Text>
               </View>
 
               <View style={styles.statBox}>
                 <Text style={styles.statTitle}>Fixed monthly pay</Text>
-                <Text style={styles.statValue}>PKR 45,000</Text>
+                <Text style={styles.statValue}>{plan.fixedMonthly || 'PKR 45,000'}</Text>
               </View>
 
               <View style={styles.statBox}>
                 <Text style={styles.statTitle}>Duration</Text>
-                <Text style={styles.statValue}>12 Months</Text>
+                <Text style={styles.statValue}>{plan.duration || '12 Months'}</Text>
               </View>
             </View>
 
@@ -128,10 +175,20 @@ export default function CarPlanDetailScreen({ route, navigation }) {
               placeholderTextColor="#94A3B8"
               value={referralCode2}
               onChangeText={setReferralCode2}
+              autoCapitalize="none"
             />
 
-            <TouchableOpacity style={styles.actionButton} activeOpacity={0.85}>
-              <Text style={styles.actionButtonText}>Join With Installments</Text>
+            <TouchableOpacity 
+              style={[styles.actionButton, loadingType === 'installments' && { opacity: 0.7 }]} 
+              activeOpacity={0.85}
+              disabled={loadingType !== null}
+              onPress={() => handleJoinPlan('installments')}
+            >
+              {loadingType === 'installments' ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.actionButtonText}>Join With Installments</Text>
+              )}
             </TouchableOpacity>
 
             <Text style={styles.descriptionText}>

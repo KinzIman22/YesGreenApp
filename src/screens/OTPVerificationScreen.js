@@ -12,6 +12,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { verifyOtp, resendOtp } from '../api/authApi';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -36,7 +37,7 @@ const ThemeColors = {
 };
 
 const OTPVerificationScreen = ({ navigation, route }) => {
-  const userEmail = route?.params?.email || 'kinzulkinzul@gmail.com';
+  const userEmail = route?.params?.email;
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(30);
@@ -68,7 +69,6 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     newOtp[index] = cleanText;
     setOtp(newOtp);
 
-    // Auto focus to next input
     if (cleanText && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -81,31 +81,73 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     }
   };
 
-  // Resend OTP Code
-  const handleResend = () => {
+  // Resend OTP Code API Integration
+  const handleResend = async () => {
     if (!canResend) return;
-    setTimer(30);
-    setCanResend(false);
-    setOtp(['', '', '', '', '', '']);
-    inputRefs.current[0]?.focus();
-    Alert.alert('OTP Sent', `A new verification code has been sent to ${userEmail}`);
+
+    if (!userEmail) {
+      Alert.alert('Error', 'User email is missing.');
+      return;
+    }
+
+    try {
+      await resendOtp({ email: userEmail.trim() });
+      setTimer(30);
+      setCanResend(false);
+      setOtp(['', '', '', '', '', '']);
+      inputRefs.current[0]?.focus();
+      Alert.alert('OTP Sent', `A new verification code has been sent to ${userEmail}`);
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || 'Failed to resend OTP. Please try again.';
+      Alert.alert('Error', errorMsg);
+    }
   };
 
-  // Verify Button Handler
-  const handleVerify = () => {
+  // Verify Button Handler (Real Backend Email OTP)
+  const handleVerify = async () => {
+    if (isLoading) return;
+
     const fullOtp = otp.join('');
     if (fullOtp.length < 6) {
       Alert.alert('Invalid OTP', 'Please enter complete 6-digit verification code.');
       return;
     }
 
-    setIsLoading(true);
-    setTimeout(() => {
+    if (!userEmail) {
+      Alert.alert('Error', 'User email is missing.');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const payload = {
+        email: userEmail.trim(),
+        otp: fullOtp.trim(),
+      };
+
+      console.log('Verifying payload:', payload);
+
+      // Real backend API call to verify email OTP code
+      const response = await verifyOtp(payload);
       setIsLoading(false);
-      Alert.alert('Success', 'Account verified successfully!', [
-        { text: 'OK', onPress: () => navigation?.navigate('Login') },
+      console.log('API Verify Response:', response);
+
+      Alert.alert('Success', response?.message || 'Account verified successfully!', [
+        { 
+          text: 'OK', 
+          onPress: () => {
+            navigation?.navigate('Login'); 
+          } 
+        },
       ]);
-    }, 1500);
+    } catch (error) {
+      setIsLoading(false);
+      console.log('Verification Error:', error?.response?.data || error.message);
+      Alert.alert(
+        'Verification Failed', 
+        error?.response?.data?.message || 'Invalid or expired OTP code. Please try again.'
+      );
+    }
   };
 
   return (
@@ -161,7 +203,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
           <Text style={styles.welcomeTitle}>Verify Your Account</Text>
           <Text style={styles.welcomeSubtitle}>
             Enter the 6 digit code sent to{'\n'}
-            <Text style={styles.emailText}>{userEmail}</Text>
+            <Text style={styles.emailText}>{userEmail || 'No email provided'}</Text>
           </Text>
 
           {/* 6 Digit Inputs Row */}
@@ -319,7 +361,6 @@ const styles = StyleSheet.create({
     color: ThemeColors.textDark,
   },
 
-  /* OTP Input Styling */
   otpRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -343,7 +384,6 @@ const styles = StyleSheet.create({
     backgroundColor: ThemeColors.white,
   },
 
-  /* Resend & Timer */
   resendContainer: {
     marginBottom: 28,
   },
@@ -362,7 +402,6 @@ const styles = StyleSheet.create({
     color: ThemeColors.forgotText,
   },
 
-  /* Verify Button */
   verifyBtn: {
     backgroundColor: ThemeColors.buttonGreen,
     borderRadius: 14,

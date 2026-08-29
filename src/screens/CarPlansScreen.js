@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, Image, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useResponsiveLayout } from '../utils/responsive';
+import { getCarPlans } from '../api/apiService';
 
 const ThemeColors = {
   screenBg: '#F4F6F9',
@@ -17,32 +18,63 @@ const ThemeColors = {
 export default function CarPlansScreen({ navigation }) {
   const { containerMaxWidth } = useResponsiveLayout();
 
-  const carPlans = [
-    {
-      id: '1',
-      title: 'Plan 1',
-      price: '30 لاکھ',
-      image: require('../assets/car1.png'), // Yahan apni image ka path dein
-    },
-    {
-      id: '2',
-      title: 'Plan 2',
-      price: '60 لاکھ',
-      image: require('../assets/car2.png'), // Yahan apni image ka path dein
-    },
-    {
-      id: '3',
-      title: 'Plan 3',
-      price: '1.20 کروڑ',
-      image: require('../assets/car3.png'), // Yahan apni image ka path dein
-    },
-    {
-      id: '4',
-      title: 'Plan 4',
-      price: '2.50 کروڑ',
-      image: require('../assets/car4.png'), // Yahan apni image ka path dein
-    },
+  const [loading, setLoading] = useState(true);
+  const [carPlans, setCarPlans] = useState([]);
+
+  useEffect(() => {
+    fetchPlans();
+  }, []);
+
+  const fetchPlans = async () => {
+    try {
+      setLoading(true);
+      const data = await getCarPlans();
+      // Agar API se data array ki surat mein aaye ya kisi object key ke andar ho
+      const plansList = Array.isArray(data) ? data : data?.plans || data?.data || [];
+      
+      // Fallback local static data agar API empty ho ya image map karni ho
+      const formattedPlans = plansList.map((plan, index) => ({
+        id: plan.id?.toString() || (index + 1).toString(),
+        title: plan.title || `Plan ${index + 1}`,
+        price: plan.price || plan.amount || '0',
+        image: getCarImage(index),
+        ...plan, // API ke baki fields bhi preserve rahein
+      }));
+
+      setCarPlans(formattedPlans.length > 0 ? formattedPlans : defaultStaticPlans);
+    } catch (error) {
+      console.log('Error fetching car plans:', error);
+      // Fallback to static data on error so user is not stuck
+      setCarPlans(defaultStaticPlans);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getCarImage = (index) => {
+    switch (index % 4) {
+      case 0: return require('../assets/car1.png');
+      case 1: return require('../assets/car2.png');
+      case 2: return require('../assets/car3.png');
+      default: return require('../assets/car4.png');
+    }
+  };
+
+  const defaultStaticPlans = [
+    { id: '1', title: 'Plan 1', price: '30 لاکھ', image: require('../assets/car1.png') },
+    { id: '2', title: 'Plan 2', price: '60 لاکھ', image: require('../assets/car2.png') },
+    { id: '3', title: 'Plan 3', price: '1.20 کروڑ', image: require('../assets/car3.png') },
+    { id: '4', title: 'Plan 4', price: '2.50 کروڑ', image: require('../assets/car4.png') },
   ];
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.center]} >
+        <StatusBar barStyle="light-content" backgroundColor={ThemeColors.headerBg} />
+        <ActivityIndicator size="large" color={ThemeColors.headerBg} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -80,7 +112,7 @@ export default function CarPlansScreen({ navigation }) {
               style={styles.planCard} 
               activeOpacity={0.9}
               onPress={() => {
-                navigation.navigate('CarPlanDetailScreen',{plan:plan})
+                navigation.navigate('CarPlanDetailScreen', { plan: plan });
               }}
             >
               <View style={styles.cardHeaderRow}>
@@ -110,6 +142,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: ThemeColors.screenBg,
+    alignItems: 'center',
+  },
+  center: {
+    justifyContent: 'center',
     alignItems: 'center',
   },
   header: {

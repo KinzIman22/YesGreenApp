@@ -11,10 +11,12 @@ import {
   Image,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useResponsiveLayout } from '../utils/responsive'; // Import responsive helper
+import { addBalance } from '../api/walletApi';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -34,6 +36,13 @@ const ThemeColors = {
 
 const quickAmounts = ['100', '500', '1000', '2500', '5000', '10000'];
 
+// selectedMethod (internal key) -> paymentMethod string bhejni hai backend ko
+const PAYMENT_METHOD_LABELS = {
+  jazzcash: 'JazzCash',
+  easypaisa: 'Easypaisa',
+  ubl: 'UBL Bank Transfer',
+};
+
 const DepositScreen = ({ navigation, route }) => {
   const { isMobile } = useResponsiveLayout();
 
@@ -46,6 +55,7 @@ const DepositScreen = ({ navigation, route }) => {
   const [transactionRef, setTransactionRef] = useState('');
   const [note, setNote] = useState('');
   const [imageUri, setImageUri] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (route?.params?.amount) {
@@ -93,7 +103,9 @@ const DepositScreen = ({ navigation, route }) => {
     setImageUri(null);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (submitting) return;
+
     if (!amount) {
       showAlert('Error', 'Please enter an amount.');
       return;
@@ -106,12 +118,56 @@ const DepositScreen = ({ navigation, route }) => {
       showAlert('Error', 'Please enter transaction reference.');
       return;
     }
+    if (!imageUri) {
+      showAlert('Error', 'Please upload the payment screenshot.');
+      return;
+    }
 
-    showAlert(
-      'Success',
-      'Payment request submitted successfully!',
-      () => resetForm()
-    );
+    try {
+      setSubmitting(true);
+
+      const formData = new FormData();
+      formData.append('amount', amount);
+      formData.append('paymentMethod', PAYMENT_METHOD_LABELS[selectedMethod] || selectedMethod);
+      formData.append('senderName', senderName);
+      formData.append('transactionReference', transactionRef);
+      if (bankName) formData.append('bankName', bankName);
+      if (note) formData.append('note', note);
+
+      // Screenshot file - filename/type ka guess lagate hain uri se
+      const filename = imageUri.split('/').pop();
+      const match = /\.(\w+)$/.exec(filename || '');
+      const fileType = match ? `image/${match[1]}` : 'image/jpeg';
+
+      formData.append('paymentScreenshot', {
+        uri: imageUri,
+        name: filename || 'payment_screenshot.jpg',
+        type: fileType,
+      });
+
+      const data = await addBalance(formData);
+
+      showAlert(
+        'Success',
+        data?.message || 'Payment request submitted successfully! It will be reviewed by admin shortly.',
+        () => {
+          resetForm();
+          navigation?.goBack();
+        }
+      );
+    } catch (error) {
+      console.log('Deposit submit error:', error?.response?.data || error.message);
+
+      const backendMsg = error.response?.data?.message;
+      const finalMsg = Array.isArray(backendMsg) ? backendMsg[0] : backendMsg;
+
+      showAlert(
+        'Submission Failed',
+        finalMsg || 'Could not submit payment request. Please check your connection and try again.'
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -315,8 +371,16 @@ const DepositScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
-              <Text style={styles.submitBtnText}>Submit Payment Request</Text>
+            <TouchableOpacity
+              style={[styles.submitBtn, submitting && { opacity: 0.7 }]}
+              onPress={handleSubmit}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <ActivityIndicator color={ThemeColors.white} />
+              ) : (
+                <Text style={styles.submitBtnText}>Submit Payment Request</Text>
+              )}
             </TouchableOpacity>
           </View>
         </ScrollView>

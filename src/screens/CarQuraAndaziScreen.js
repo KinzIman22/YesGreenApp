@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,9 +9,11 @@ import {
   TouchableOpacity,
   Clipboard,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useResponsiveLayout } from '../utils/responsive'; // Import responsive helper
+import { getCarParticipationInfo, getMyBalance } from '../api/apiService';
 
 const ThemeColors = {
   primaryDark: '#0A2540',
@@ -38,16 +40,56 @@ const ThemeColors = {
 const CarQuraAndaziScreen = ({ navigation }) => {
   const { width, containerMaxWidth } = useResponsiveLayout();
 
+  const [loading, setLoading] = useState(true);
+  const [participationData, setParticipationData] = useState(null);
+  const [walletBalance, setWalletBalance] = useState(0);
+
   // Dynamic width calculations based on current screen container
   const CONTAINER_WIDTH = containerMaxWidth === '100%' ? width - 32 : containerMaxWidth - 32;
   const GRID_CARD_WIDTH = (CONTAINER_WIDTH - 12) / 2;
 
-  const couponNumber = "596104";
+  useEffect(() => {
+    fetchCarAndWalletData();
+  }, []);
+
+  const fetchCarAndWalletData = async () => {
+    try {
+      setLoading(true);
+      const [carInfo, balanceInfo] = await Promise.all([
+        getCarParticipationInfo().catch(() => null),
+        getMyBalance().catch(() => null),
+      ]);
+      setParticipationData(carInfo);
+      if (balanceInfo) {
+        setWalletBalance(balanceInfo.balance || balanceInfo.mainWallet || 0);
+      }
+    } catch (error) {
+      console.log('Error fetching car data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // API se coupon number lena, agar na ho toh default placeholder
+  const couponNumber = participationData?.couponNumber || participationData?.participation?.couponNumber || "------";
 
   const copyToClipboard = () => {
+    if (couponNumber === "------") {
+      Alert.alert("Notice", "No active coupon number available yet.");
+      return;
+    }
     Clipboard.setString(couponNumber);
     Alert.alert("Success", "Coupon number copied to clipboard!");
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.center]} >
+        <StatusBar barStyle="light-content" backgroundColor="#123D78" />
+        <ActivityIndicator size="large" color="#FFFFFF" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -122,8 +164,8 @@ const CarQuraAndaziScreen = ({ navigation }) => {
                 <MaterialCommunityIcons name="wallet" size={20} color={ThemeColors.primaryDark} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.walletTitle}>Main Wallet Bala...</Text>
-                <Text style={styles.walletAmount}>PKR 0</Text>
+                <Text style={styles.walletTitle}>Main Wallet Balance</Text>
+                <Text style={styles.walletAmount}>PKR {walletBalance}</Text>
               </View>
             </View>
 
@@ -143,7 +185,10 @@ const CarQuraAndaziScreen = ({ navigation }) => {
 
           <View style={styles.gridContainer}>
             {/* Car Qura Andazi */}
-            <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuBlue, width: GRID_CARD_WIDTH }]}>
+            <TouchableOpacity 
+              style={[styles.menuCard, { backgroundColor: ThemeColors.menuBlue, width: GRID_CARD_WIDTH }]}
+              onPress={() => navigation.navigate('CarPlansScreen')}
+            >
               <View style={styles.menuIconBox}>
                 <Ionicons name="car-sport" size={22} color={ThemeColors.white} />
               </View>
@@ -154,7 +199,10 @@ const CarQuraAndaziScreen = ({ navigation }) => {
             </TouchableOpacity>
 
             {/* Add Contribution */}
-            <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuGreen, width: GRID_CARD_WIDTH }]}>
+            <TouchableOpacity 
+              style={[styles.menuCard, { backgroundColor: ThemeColors.menuGreen, width: GRID_CARD_WIDTH }]}
+              onPress={() => navigation.navigate('AddCarContributionScreen')} // Navigation route as per standard naming
+            >
               <View style={styles.menuIconBox}>
                 <Ionicons name="add" size={22} color={ThemeColors.white} />
               </View>
@@ -165,7 +213,10 @@ const CarQuraAndaziScreen = ({ navigation }) => {
             </TouchableOpacity>
 
             {/* Change Plan */}
-            <TouchableOpacity style={[styles.menuCard, { backgroundColor: ThemeColors.menuOrange, width: GRID_CARD_WIDTH }]}>
+            <TouchableOpacity 
+              style={[styles.menuCard, { backgroundColor: ThemeColors.menuOrange, width: GRID_CARD_WIDTH }]}
+              onPress={() => navigation.navigate('CarPlansScreen')}
+            >
               <View style={styles.menuIconBox}>
                 <MaterialCommunityIcons name="swap-horizontal" size={22} color={ThemeColors.white} />
               </View>
@@ -230,6 +281,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#123D78',
+    alignItems: 'center',
+  },
+  center: {
+    justifyContent: 'center',
     alignItems: 'center',
   },
   responsiveWrapper: {

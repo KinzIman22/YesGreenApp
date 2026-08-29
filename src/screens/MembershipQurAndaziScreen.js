@@ -1,24 +1,78 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, Image, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { getRegistrationLotteryInfo, payRegistrationLottery, playRegistrationLottery } from '../api/apiService';
 
 export default function MembershipQurAndaziScreen({ navigation }) {
-  // User ka available balance ya check state
-  const [userBalance, setUserBalance] = useState(500); // Agar 1500 ya ziada hoga toh enroll ho jaye ga
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [lotteryInfo, setLotteryInfo] = useState(null);
   const [showInfo, setShowInfo] = useState(false);
 
-  const handleJoinNow = () => {
-    const requiredAmount = 1500;
-    
-    if (userBalance >= requiredAmount) {
-      setShowInfo(false);
-      // Enrollment successful logic yahan likhein
-      Alert.alert("Success", "You have successfully enrolled in the Membership Lottery!");
-    } else {
-      // Agar Rs 1,500 pure nahi hain toh info notification show hoga
-      setShowInfo(true);
+  // Screen load hone par user ki lottery info fetch karna
+  useEffect(() => {
+    fetchLotteryData();
+  }, []);
+
+  const fetchLotteryData = async () => {
+    try {
+      setLoading(true);
+      const data = await getRegistrationLotteryInfo();
+      setLotteryInfo(data);
+    } catch (error) {
+      Alert.alert('Error', error.response?.data?.message || 'Lottery data load nahi ho saka.');
+    } finally {
+      setLoading(false);
     }
   };
+
+  // Join / Pay Registration Fee Function (PKR 1,500)
+  const handleJoinNow = async () => {
+    try {
+      setActionLoading(true);
+      setShowInfo(false);
+      const res = await payRegistrationLottery();
+      Alert.alert('Success', res.message || 'You have successfully enrolled in the Registration Lottery!');
+      fetchLotteryData(); // Data refresh karne ke liye
+    } catch (error) {
+      // Agar wallet mein balance kam ho ya koi aur error aaye
+      const errorMessage = error.response?.data?.message || 'Payment fail ho gayi.';
+      if (errorMessage.toLowerCase().includes('balance') || error.response?.status === 400) {
+        setShowInfo(true);
+      } else {
+        Alert.alert('Error', errorMessage);
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Play Today's Draw Function (Once paid)
+  const handlePlayToday = async () => {
+    try {
+      setActionLoading(true);
+      const res = await playRegistrationLottery();
+      Alert.alert('Result', res.message || 'Played successfully for today!');
+      fetchLotteryData();
+    } catch (error) {
+      Alert.alert('Info', error.response?.data?.message || 'Aap aaj pehle hi play kar chuke hain.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.center]} >
+        <StatusBar barStyle="light-content" backgroundColor="#004D25" />
+        <ActivityIndicator size="large" color="#004D25" />
+      </SafeAreaView>
+    );
+  }
+
+  const hasPaid = lotteryInfo?.hasPaid;
+  const canPlayToday = lotteryInfo?.canPlayToday;
+  const couponNumber = lotteryInfo?.lottery?.couponNumber;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -45,12 +99,21 @@ export default function MembershipQurAndaziScreen({ navigation }) {
             <Ionicons name="ticket-outline" size={32} color="#FFFFFF" />
           </View>
 
-          <Text style={styles.cardMainTitle}>Join Membership Lottery</Text>
+          <Text style={styles.cardMainTitle}>
+            {hasPaid ? 'Your Active Lottery' : 'Join Membership Lottery'}
+          </Text>
           
           <Text style={styles.cardDesc}>
-            Pay PKR 1,500 once to get a permanent 6-digit coupon. Play every day for free.{'\n'}
-            Win PKR 1,000 every time your number matches!
+            {hasPaid 
+              ? `Aapka permanent 6-digit coupon number yeh hai:\n`
+              : 'Pay PKR 1,500 once to get a permanent 6-digit coupon. Play every day for free.\nWin PKR 1,000 every time your number matches!'}
           </Text>
+
+          {hasPaid && (
+            <View style={styles.couponBox}>
+              <Text style={styles.couponText}>{couponNumber || '------'}</Text>
+            </View>
+          )}
 
           {/* Feature Row 1 */}
           <View style={styles.featureRow}>
@@ -76,23 +139,44 @@ export default function MembershipQurAndaziScreen({ navigation }) {
             <Text style={styles.featureText}>Spin daily and win PKR 1,000 indefinitely</Text>
           </View>
 
-          {/* Join Now Button */}
-          <TouchableOpacity style={styles.joinButton} onPress={handleJoinNow} activeOpacity={0.8}>
-            <Ionicons name="person-add-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-            <Text style={styles.joinButtonText}>Join Now • Rs 1,500</Text>
-          </TouchableOpacity>
+          {/* Action Button: Agar fee pay nahi ki toh Join Now, warna Play Today */}
+          {!hasPaid ? (
+            <TouchableOpacity 
+              style={styles.joinButton} 
+              onPress={handleJoinNow} 
+              activeOpacity={0.8}
+              disabled={actionLoading}
+            >
+              <Ionicons name="person-add-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.joinButtonText}>
+                {actionLoading ? 'Processing...' : 'Join Now • Rs 1,500'}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity 
+              style={[styles.joinButton, !canPlayToday && { backgroundColor: '#A0AEC0' }]} 
+              onPress={handlePlayToday} 
+              activeOpacity={0.8}
+              disabled={actionLoading || !canPlayToday}
+            >
+              <Ionicons name="play-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.joinButtonText}>
+                {actionLoading ? 'Processing...' : canPlayToday ? 'Play Today\'s Draw' : 'Already Played Today'}
+              </Text>
+            </TouchableOpacity>
+          )}
 
         </View>
 
-        {/* Info Notification Card (Appears when balance is less than 1500) */}
+        {/* Info Notification Card (Appears when balance is low or error occurs) */}
         {showInfo && (
           <View style={styles.infoCard}>
             <View style={styles.infoIconWrapper}>
               <Ionicons name="information-outline" size={18} color="#FFFFFF" />
             </View>
             <View style={styles.infoTextContainer}>
-              <Text style={styles.infoTitle}>Info</Text>
-              <Text style={styles.infoDesc}>Minimum Rs 1,500 is required to join the Registration Lottery.</Text>
+              <Text style={styles.infoTitle}>Insufficient Balance / Info</Text>
+              <Text style={styles.infoDesc}>Minimum Rs 1,500 is required in your wallet to join the Registration Lottery.</Text>
             </View>
           </View>
         )}
@@ -106,6 +190,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fafafa',
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -174,6 +262,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 18,
     marginBottom: 20,
+  },
+  couponBox: {
+    backgroundColor: '#E8F5E9',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#004D25',
+  },
+  couponText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#004D25',
+    letterSpacing: 2,
   },
   featureRow: {
     flexDirection: 'row',

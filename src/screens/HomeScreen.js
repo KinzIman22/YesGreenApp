@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,8 +11,10 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { VideoView, useVideoPlayer } from 'expo-video';
+import { useFocusEffect } from '@react-navigation/native';
 import { useResponsiveLayout } from '../utils/responsive';
 import ErrorScreen from '../components/ErrorScreen';
+import { getMyBalance } from '../api/walletApi';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -38,6 +40,8 @@ const HomeScreen = ({ navigation }) => {
   const { width, isMobile, containerMaxWidth } = useResponsiveLayout();
   const [lang, setLang] = useState('EN');
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+  const [balance, setBalance] = useState(0);
+  const [balanceLoading, setBalanceLoading] = useState(true);
 
   const BANNER_WIDTH = containerMaxWidth === '100%' ? width - 32 : containerMaxWidth - 32;
   const CARD_WIDTH = (BANNER_WIDTH - 12) / 2;
@@ -58,6 +62,26 @@ const HomeScreen = ({ navigation }) => {
       setActiveVideoIndex(slide);
     }
   };
+
+  const fetchBalance = useCallback(async () => {
+    try {
+      setBalanceLoading(true);
+      const data = await getMyBalance();
+      setBalance(data.balance);
+    } catch (error) {
+      console.log('Balance fetch error:', error?.response?.data || error.message);
+      // Balance fetch fail ho to purani value hi dikhti rahegi, crash nahi hoga
+    } finally {
+      setBalanceLoading(false);
+    }
+  }, []);
+
+  // Jab bhi Home screen focus mein aaye (jaise Deposit/Withdraw se wapas aane par), balance refresh ho jaye
+  useFocusEffect(
+    useCallback(() => {
+      fetchBalance();
+    }, [fetchBalance])
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -173,7 +197,9 @@ const HomeScreen = ({ navigation }) => {
             </View>
             <View style={styles.balanceTextContainer}>
               <Text style={styles.balanceTitle}>Total Balance</Text>
-              <Text style={styles.balanceAmount}>PKR 0</Text>
+              <Text style={styles.balanceAmount}>
+                {balanceLoading ? 'Loading...' : `PKR ${balance}`}
+              </Text>
             </View>
           </View>
 

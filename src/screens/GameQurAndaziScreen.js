@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useResponsiveLayout } from '../utils/responsive';
+import { getGameQurAndazi, investGameQurAndazi } from '../api/apiService'; // Make sure these functions exist in apiService
 
 const ThemeColors = {
   primaryBrown: '#79320E',
@@ -14,17 +15,68 @@ const ThemeColors = {
 
 export default function GameQurAndaziScreen({ navigation }) {
   const { width, containerMaxWidth } = useResponsiveLayout();
-  const [userBalance, setUserBalance] = useState(20); // Testing ke liye kam balance rakha hai taaki info notification show ho sakay
+  const [userBalance, setUserBalance] = useState(0); 
   const [showInfo, setShowInfo] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [investing, setInvesting] = useState(false);
 
-  const handleInvestNow = () => {
+  useEffect(() => {
+    fetchGameData();
+  }, []);
+
+  const fetchGameData = async () => {
+    try {
+      setLoading(true);
+      const response = await getGameQurAndazi();
+      // Adjust according to your actual API response structure (e.g., response.balance or response.data.balance)
+      const balance = response?.balance ?? response?.data?.balance ?? 0;
+      setUserBalance(balance);
+      if (balance < 50) {
+        setShowInfo(true);
+      } else {
+        setShowInfo(false);
+      }
+    } catch (error) {
+      console.log('Error fetching game qura andazi data:', error);
+      // Fallback or handle error silently if needed, or show alert
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInvestNow = async () => {
     const requiredAmount = 50;
     
-    if (userBalance >= requiredAmount) {
-      setShowInfo(false);
-      Alert.alert("Success", "You have successfully invested Rs 50 in Game Qur'a Andazi!");
-    } else {
+    if (userBalance < requiredAmount) {
       setShowInfo(true);
+      return;
+    }
+
+    try {
+      setInvesting(true);
+      setShowInfo(false);
+
+      const payload = {
+        amount: requiredAmount,
+      };
+
+      const response = await investGameQurAndazi(payload);
+
+      Alert.alert(
+        "Success", 
+        response?.message || "You have successfully invested Rs 50 in Game Qur'a Andazi!",
+        [
+          { 
+            text: "OK", 
+            onPress: () => fetchGameData() // Refresh balance/data after investing
+          }
+        ]
+      );
+    } catch (error) {
+      console.log('Error investing in game qura andazi:', error);
+      Alert.alert("Error", error?.response?.data?.message || error?.message || "Failed to invest. Please try again.");
+    } finally {
+      setInvesting(false);
     }
   };
 
@@ -48,65 +100,84 @@ export default function GameQurAndaziScreen({ navigation }) {
       <View style={[styles.responsiveWrapper, { maxWidth: containerMaxWidth === '100%' ? '100%' : containerMaxWidth }]}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
-          {/* Main White Card */}
-          <View style={styles.mainCard}>
-            
-            {/* Top Brown Dice Icon Box */}
-            <View style={styles.topIconBox}>
-              <Ionicons name="dice-outline" size={32} color="#FFFFFF" />
+          {loading ? (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color={ThemeColors.primaryBrown} />
             </View>
+          ) : (
+            <>
+              {/* Main White Card */}
+              <View style={styles.mainCard}>
+                
+                {/* Top Brown Dice Icon Box */}
+                <View style={styles.topIconBox}>
+                  <Ionicons name="dice-outline" size={32} color="#FFFFFF" />
+                </View>
 
-            <Text style={styles.cardMainTitle}>Start Playing Game Qur'a Andazi</Text>
-            
-            <Text style={styles.cardDesc}>
-              Invest PKR 50 each day to grow your prize.{'\n'}
-              Day 1 → Rs 1,000 prize. Day 30 → Rs 30,000!{'\n'}
-              Win by matching the daily Qur'a Andazi number.
-            </Text>
+                <Text style={styles.cardMainTitle}>Start Playing Game Qur'a Andazi</Text>
+                
+                <Text style={styles.cardDesc}>
+                  Invest PKR 50 each day to grow your prize.{'\n'}
+                  Day 1 → Rs 1,000 prize. Day 30 → Rs 30,000!{'\n'}
+                  Win by matching the daily Qur'a Andazi number.
+                </Text>
 
-            {/* Feature Row 1 */}
-            <View style={styles.featureRow}>
-              <View style={styles.featureIconBox}>
-                <Ionicons name="trending-up-outline" size={18} color={ThemeColors.primaryBrown} />
+                {/* Feature Row 1 */}
+                <View style={styles.featureRow}>
+                  <View style={styles.featureIconBox}>
+                    <Ionicons name="trending-up-outline" size={18} color={ThemeColors.primaryBrown} />
+                  </View>
+                  <Text style={styles.featureText}>Prize grows: min(invested × 20, 30,000)</Text>
+                </View>
+
+                {/* Feature Row 2 */}
+                <View style={styles.featureRow}>
+                  <View style={styles.featureIconBox}>
+                    <Ionicons name="calendar-outline" size={18} color={ThemeColors.primaryBrown} />
+                  </View>
+                  <Text style={styles.featureText}>Day only advances when you invest — no pressure</Text>
+                </View>
+
+                {/* Feature Row 3 */}
+                <View style={styles.featureRow}>
+                  <View style={styles.featureIconBox}>
+                    <Ionicons name="trophy-outline" size={18} color={ThemeColors.primaryBrown} />
+                  </View>
+                  <Text style={styles.featureText}>Permanent token after reaching PKR 30,000 cap</Text>
+                </View>
+
+                {/* Invest Now Button */}
+                <TouchableOpacity 
+                  style={[styles.investButton, investing && { opacity: 0.7 }]} 
+                  onPress={handleInvestNow} 
+                  activeOpacity={0.8}
+                  disabled={investing}
+                >
+                  {investing ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="play-circle-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                      <Text style={styles.investButtonText}>Invest Rs 50 — Start Now</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
               </View>
-              <Text style={styles.featureText}>Prize grows: min(invested × 20, 30,000)</Text>
-            </View>
 
-            {/* Feature Row 2 */}
-            <View style={styles.featureRow}>
-              <View style={styles.featureIconBox}>
-                <Ionicons name="calendar-outline" size={18} color={ThemeColors.primaryBrown} />
-              </View>
-              <Text style={styles.featureText}>Day only advances when you invest — no pressure</Text>
-            </View>
-
-            {/* Feature Row 3 */}
-            <View style={styles.featureRow}>
-              <View style={styles.featureIconBox}>
-                <Ionicons name="trophy-outline" size={18} color={ThemeColors.primaryBrown} />
-              </View>
-              <Text style={styles.featureText}>Permanent token after reaching PKR 30,000 cap</Text>
-            </View>
-
-            {/* Invest Now Button */}
-            <TouchableOpacity style={styles.investButton} onPress={handleInvestNow} activeOpacity={0.8}>
-              <Ionicons name="play-circle-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.investButtonText}>Invest Rs 50 — Start Now</Text>
-            </TouchableOpacity>
-
-          </View>
-
-          {/* Info Notification Card (Appears when balance is less than 50) */}
-          {showInfo && (
-            <View style={styles.infoCard}>
-              <View style={styles.infoIconWrapper}>
-                <Ionicons name="information-outline" size={18} color="#FFFFFF" />
-              </View>
-              <View style={styles.infoTextContainer}>
-                <Text style={styles.infoTitle}>Info</Text>
-                <Text style={styles.infoDesc}>Minimum Rs. 50 balance is required to join daily lottery.</Text>
-              </View>
-            </View>
+              {/* Info Notification Card (Appears when balance is less than 50) */}
+              {showInfo && (
+                <View style={styles.infoCard}>
+                  <View style={styles.infoIconWrapper}>
+                    <Ionicons name="information-outline" size={18} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.infoTextContainer}>
+                    <Text style={styles.infoTitle}>Info</Text>
+                    <Text style={styles.infoDesc}>Minimum Rs. 50 balance is required to join daily lottery.</Text>
+                  </View>
+                </View>
+              )}
+            </>
           )}
 
         </ScrollView>
@@ -166,6 +237,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 40,
+  },
+  loaderContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   mainCard: {
     backgroundColor: ThemeColors.cardBg,

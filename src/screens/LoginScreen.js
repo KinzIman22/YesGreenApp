@@ -9,8 +9,13 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Ya 'react-native-vector-icons/Ionicons'
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
+import { loginUser } from '../api/authApi';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -26,7 +31,7 @@ const ThemeColors = {
   cardBg: '#FFFFFF',
   inputBg: '#F8F9FA',
   inputBorder: '#E2E8F0',
-  iconGrey: '#718096', // Crisp Pure Grey Icon Color
+  iconGrey: '#718096',
   placeholderText: '#A0AEC0',
   textDark: '#1A202C',
   textMuted: '#718096',
@@ -37,30 +42,84 @@ const LoginScreen = ({ navigation }) => {
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
+  const handleLogin = async () => {
+  if (!emailOrPhone.trim() || !password.trim()) {
+    Toast.show({
+      type: 'error',
+      text1: 'Missing Fields',
+      text2: 'Please fill in all fields',
+    });
+    return;
+  }
+
+  try {
+    setLoading(true);
+    const response = await loginUser(emailOrPhone.trim(), password);
+
+    const { access_token, refreshToken, user } = response;
+
+    await AsyncStorage.setItem('access_token', access_token);
+    await AsyncStorage.setItem('refreshToken', refreshToken);
+
+    setLoading(false);
+    navigation.replace('TabNavigator', { user });
+  } catch (error) {
+    setLoading(false);
+
+    // ===== DEBUG LOGS - TEMPORARY =====
+    console.log('=== LOGIN FAILED ===');
+    console.log('STATUS:', error.response?.status);
+    console.log('DATA:', JSON.stringify(error.response?.data));
+    console.log('HAS RESPONSE:', !!error.response);
+    console.log('HAS REQUEST:', !!error.request);
+    console.log('====================');
+    // ===== END DEBUG LOGS =====
+
+    if (error.response) {
+      const backendMsg = error.response?.data?.message;
+      const finalMsg = Array.isArray(backendMsg) ? backendMsg[0] : (backendMsg || 'Invalid email or password.');
+
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Credentials',
+        text2: finalMsg,
+      });
+    } else if (error.request) {
+      Toast.show({
+        type: 'error',
+        text1: 'Network Error',
+        text2: 'Please check your internet connection and try again.',
+      });
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Something Went Wrong',
+        text2: error.message || 'Please try again.',
+      });
+    }
+  }
+};
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={ThemeColors.primaryDark} />
 
       {/* Top Section */}
       <View style={styles.topSection}>
-        {/* Background Stars */}
         <Text style={[styles.starGold, { top: 12, left: 18, fontSize: 18 }]}>★</Text>
         <Text style={[styles.starGrey, { top: 15, left: 110, fontSize: 13 }]}>★</Text>
         <Text style={[styles.starGold, { bottom: 18, left: 22, fontSize: 16 }]}>★</Text>
-
         <Text style={[styles.starGold, { top: 18, right: 150, fontSize: 12 }]}>★</Text>
         <Text style={[styles.starGrey, { top: 75, right: 25, fontSize: 15 }]}>★</Text>
         <Text style={[styles.starGold, { bottom: 20, right: 18, fontSize: 14 }]}>★</Text>
 
-        {/* Background Dots */}
         <View style={[styles.dotGold, { top: 38, left: 65 }]} />
         <View style={[styles.dotGrey, { top: 70, left: 20 }]} />
         <View style={[styles.dotGold, { top: 110, left: 75 }]} />
         <View style={[styles.dotGrey, { top: 32, right: 100 }]} />
         <View style={[styles.dotGold, { top: 115, right: 55 }]} />
 
-        {/* Number Badges */}
         <View style={[styles.numberBadgeSmall, styles.badge2]}>
           <Text style={styles.badgeTextSmall}>2</Text>
         </View>
@@ -71,7 +130,6 @@ const LoginScreen = ({ navigation }) => {
           <Text style={styles.badgeTextSmall}>4</Text>
         </View>
 
-        {/* Coins Stack */}
         <View style={styles.coinStack}>
           <View style={[styles.coin, styles.topCoin]}>
             <Text style={styles.coinText}>PKR</Text>
@@ -81,7 +139,6 @@ const LoginScreen = ({ navigation }) => {
           <View style={styles.coin} />
         </View>
 
-        {/* Header Content */}
         <View style={styles.headerContent}>
           <Image
             source={require('../assets/LoginLogo.png')}
@@ -117,6 +174,7 @@ const LoginScreen = ({ navigation }) => {
               placeholderTextColor={ThemeColors.placeholderText}
               value={emailOrPhone}
               onChangeText={setEmailOrPhone}
+              autoCapitalize="none"
             />
           </View>
 
@@ -142,30 +200,34 @@ const LoginScreen = ({ navigation }) => {
           </View>
 
           {/* Forgot Password Link */}
-         <TouchableOpacity 
-  style={styles.forgotBtn}
-  onPress={() => navigation?.navigate('ForgotPassword')}
-  activeOpacity={0.7}
->
-  <Text style={styles.forgotText}>Forgot Password?</Text>
-</TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.forgotBtn}
+            onPress={() => navigation?.navigate('ForgotPassword')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.forgotText}>Forgot Password?</Text>
+          </TouchableOpacity>
 
           {/* Compact Login Button */}
-         {/* Compact Login Button */}
-<TouchableOpacity 
-  style={styles.loginBtn} 
-  activeOpacity={0.8}
-  onPress={() => navigation.replace('TabNavigator')}
->
-  <Text style={styles.loginBtnText}>Log In</Text>
-</TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.loginBtn} 
+            activeOpacity={0.8}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color={ThemeColors.white} />
+            ) : (
+              <Text style={styles.loginBtnText}>Log In</Text>
+            )}
+          </TouchableOpacity>
 
           {/* Footer Link */}
           <View style={styles.footerRow}>
             <Text style={styles.footerText}>Don't have an account? </Text>
-           <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-  <Text style={styles.signUpText}>Sign Up</Text>
-</TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+              <Text style={styles.signUpText}>Sign Up</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -185,8 +247,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
-
-  // Stars & Dots
   starGold: { position: 'absolute', color: ThemeColors.accentYellow, opacity: 0.95 },
   starGrey: { position: 'absolute', color: ThemeColors.starGrey, opacity: 0.85 },
   dotGold: {
@@ -205,14 +265,11 @@ const styles = StyleSheet.create({
     backgroundColor: ThemeColors.starGrey,
     opacity: 0.8,
   },
-
   headerContent: { alignItems: 'center', marginTop: 10 },
   logoImage: { width: 60, height: 60, marginBottom: 6 },
   brandTitle: { fontSize: 22, fontWeight: 'bold', color: ThemeColors.white },
   brandTitleGold: { color: ThemeColors.accentYellow },
   brandSubtitle: { fontSize: 12, color: ThemeColors.white, opacity: 0.8, marginTop: 2 },
-
-  // Badges & Coins
   numberBadge: {
     position: 'absolute',
     width: 38,
@@ -240,7 +297,6 @@ const styles = StyleSheet.create({
   badge2: { top: '12%', right: '28%' },
   badge7: { top: '18%', right: '12%' },
   badge4: { top: '42%', right: '5%' },
-
   coinStack: { position: 'absolute', left: '5%', top: '25%', alignItems: 'center' },
   coin: {
     width: 44,
@@ -258,8 +314,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   coinText: { fontSize: 7, fontWeight: 'bold', color: ThemeColors.coinText },
-
-  // Scroll Container & Floating Card
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: 16,
@@ -280,8 +334,6 @@ const styles = StyleSheet.create({
   },
   welcomeTitle: { fontSize: 24, fontWeight: 'bold', color: ThemeColors.textDark, marginBottom: 6 },
   welcomeSubtitle: { fontSize: 13, color: ThemeColors.textMuted, marginBottom: 24 },
-
-  // Inputs & Vector Icons
   inputLabel: { fontSize: 13, fontWeight: 'bold', color: ThemeColors.textDark, marginBottom: 8, marginTop: 12 },
   inputWrapper: {
     flexDirection: 'row',
@@ -297,11 +349,8 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   textInput: { flex: 1, fontSize: 14, color: ThemeColors.textDark },
-
   forgotBtn: { alignSelf: 'flex-end', marginTop: 12, marginBottom: 20 },
   forgotText: { fontSize: 13, fontWeight: 'bold', color: ThemeColors.forgotText },
-
-  // Compact Login Button
   loginBtn: {
     backgroundColor: ThemeColors.buttonGreen,
     borderRadius: 12,

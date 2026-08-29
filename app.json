@@ -4,11 +4,11 @@
     "slug": "MyProject",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/Logo.jpeg",
+    "icon": "./src/assets/Logo.jpeg",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/Logo.jpeg",
+      "image": "./src/assets/Logo.jpeg",
       "resizeMode": "contain",
       "backgroundColor": "#054A29"
     },
@@ -17,16 +17,24 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/Logo.jpeg",
+        "foregroundImage": "./src/assets/Logo.jpeg",
         "backgroundColor": "#054A29"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.kinzuliman.myproject"
     },
     "web": {
-      "favicon": "../assets/Logo.jpeg"
+      "favicon": "./src/assets/Logo.jpeg"
     },
     "plugins": [
-      "expo-video"
-    ]
+      "expo-video",
+      "expo-font"
+    ],
+    "extra": {
+      "apiBaseUrl": "https://api.yestimeltd.com",
+      "eas": {
+        "projectId": "51d74baf-dd28-4c05-9031-8a759ba840af"
+      }
+    }
   }
 }

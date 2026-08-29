@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { signupUser } from '../api/authApi';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -63,11 +64,13 @@ const SignUpScreen = ({ navigation }) => {
     }
   };
 
-  // --- Exception Handling & Validation ---
-  const handleSignUp = () => {
+  // --- Exception Handling & Real Backend Integration ---
+  const handleSignUp = async () => {
+    console.log("=== 1. SIGN UP BUTTON CLICKED ===");
     try {
       // 1. Empty Fields Exception
       if (!fullName.trim() || !email.trim() || !mobileNumber || !password || !confirmPassword || !cnic) {
+        console.log("-> Validation Failed: Empty Fields");
         Alert.alert('Validation Error', 'Please fill in all the required fields.');
         return;
       }
@@ -75,49 +78,73 @@ const SignUpScreen = ({ navigation }) => {
       // 2. Email Exception
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
+        console.log("-> Validation Failed: Invalid Email");
         Alert.alert('Invalid Email', 'Please enter a valid email address.');
         return;
       }
 
       // 3. Mobile Number Exception
       if (mobileNumber.length < 11) {
+        console.log("-> Validation Failed: Mobile Number length < 11");
         Alert.alert('Invalid Mobile Number', 'Mobile number must be 11 digits (e.g., 03001234567).');
         return;
       }
 
       // 4. Password Exceptions
       if (password.length < 6) {
+        console.log("-> Validation Failed: Password too short");
         Alert.alert('Weak Password', 'Password must be at least 6 characters long.');
         return;
       }
 
       if (password !== confirmPassword) {
+        console.log("-> Validation Failed: Passwords do not match");
         Alert.alert('Password Mismatch', 'Password and Confirm Password do not match.');
         return;
       }
 
       // 5. CNIC Exception
       if (cnic.length !== 13) {
+        console.log("-> Validation Failed: CNIC length != 13");
         Alert.alert('Invalid CNIC', 'CNIC must be exactly 13 digits without dashes.');
         return;
       }
 
       // 6. Terms Checkbox Exception
       if (!agreeTerms) {
+        console.log("-> Validation Failed: Terms not agreed");
         Alert.alert('Terms & Conditions', 'Please agree to the Terms & Conditions to proceed.');
         return;
       }
 
-      // Navigation to OTP Verification Screen
+      console.log("-> All validations passed! Sending request to backend...");
       setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-        navigation?.navigate('OTPVerification', { email: email.trim() });
-      }, 1200);
+
+      const payload = {
+        name: fullName.trim(),
+        email: email.trim(),
+        phone: mobileNumber.trim(),
+        password: password,
+        cnicNumber: cnic.trim(),
+      };
+
+      console.log("Payload data being sent:", payload);
+
+      const response = await signupUser(payload);
+      console.log("=== API SUCCESS RESPONSE ===", response);
+
+      setIsLoading(false);
+      navigation?.navigate('OTPVerification', { email: email.trim() });
 
     } catch (error) {
       setIsLoading(false);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      console.log("=== API ERROR CAUGHT ===");
+      console.log("Error object:", error);
+      console.log("Error response data:", error.response?.data);
+      console.log("Error message:", error.message);
+
+      const errorMsg = error.response?.data?.message || error.message || 'Signup failed. Please try again.';
+      Alert.alert('Signup Error', Array.isArray(errorMsg) ? errorMsg[0] : errorMsg);
     }
   };
 

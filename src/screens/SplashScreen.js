@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   StatusBar,
 } from 'react-native';
+import LogoImage from '../assets/Logo.jpeg';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -102,7 +103,7 @@ const SplashScreen = ({ navigation }) => {
 
         <View style={styles.logoCircle}>
           <Image
-            source={require('../assets/Logo.jpeg')}
+            source={LogoImage}
             style={styles.logoImage}
             resizeMode="contain"
           />
