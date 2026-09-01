@@ -9,8 +9,12 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
+  Dimensions,
+  ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
+import { changePassword } from '../api/authApi';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -34,10 +38,89 @@ const ThemeColors = {
 };
 
 const ChangePasswordScreen = ({ navigation }) => {
-  const [currentPassword, setCurrentPassword] = useState('Kinzu22@');
-  const [newPassword, setNewPassword] = useState('Kinzul33@');
+  const [windowWidth, setWindowWidth] = useState(Dimensions.get('window').width);
+
+  React.useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setWindowWidth(window.width);
+    });
+    return () => subscription?.remove();
+  }, []);
+
+  const isLargeScreen = windowWidth > 768;
+  const contentMaxWidth = isLargeScreen ? 600 : '100%';
+  const horizontalPadding = isLargeScreen ? 24 : 16;
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [secureCurrent, setSecureCurrent] = useState(true);
   const [secureNew, setSecureNew] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+  const [toastAnim] = useState(new Animated.Value(0));
+
+  const showToast = (message, type = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+    Animated.timing(toastAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+
+    setTimeout(() => {
+      Animated.timing(toastAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setToastVisible(false);
+      });
+    }, 2500);
+  };
+
+  const handlePasswordChange = async () => {
+    if (!currentPassword.trim() || !newPassword.trim()) {
+      showToast('Please fill in all password fields!', 'error');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      showToast('New password must be at least 8 characters!', 'error');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const payload = {
+        currentPassword: currentPassword.trim(),
+        newPassword: newPassword.trim(),
+      };
+
+      // Backend API call
+      await changePassword(payload);
+
+      showToast('Password Changed Successfully!', 'success');
+      
+      setCurrentPassword('');
+      setNewPassword('');
+
+      setTimeout(() => {
+        navigation.goBack();
+      }, 1500);
+
+    } catch (error) {
+      console.log('Change password error:', error);
+      const errorMsg = error?.response?.data?.message || 'Failed to change password. Please check your current password.';
+      showToast(errorMsg, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -45,6 +128,14 @@ const ChangePasswordScreen = ({ navigation }) => {
 
       {/* Top Section */}
       <View style={styles.topSection}>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          activeOpacity={0.8}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="chevron-back" size={24} color={ThemeColors.white} />
+        </TouchableOpacity>
+
         {/* Background Stars */}
         <Text style={[styles.starGold, { top: 12, left: 18, fontSize: 18 }]}>★</Text>
         <Text style={[styles.starGrey, { top: 15, left: 110, fontSize: 13 }]}>★</Text>
@@ -98,11 +189,14 @@ const ChangePasswordScreen = ({ navigation }) => {
 
       {/* Floating Card */}
       <ScrollView
-        contentContainerStyle={styles.scrollContainer}
+        contentContainerStyle={[
+          styles.scrollContainer, 
+          { paddingHorizontal: horizontalPadding }
+        ]}
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-        <View style={styles.floatingCard}>
+        <View style={[styles.floatingCard, { width: '100%', maxWidth: contentMaxWidth, alignSelf: 'center' }]}>
           <Text style={styles.welcomeTitle}>Change Password</Text>
           <Text style={styles.welcomeSubtitle}>
             Your password is the first line of defence for your account. Choose something strong, unique, and only yours — so your data stays exactly where it belongs.
@@ -176,11 +270,14 @@ const ChangePasswordScreen = ({ navigation }) => {
           <TouchableOpacity 
             style={styles.actionBtn} 
             activeOpacity={0.8}
-            onPress={() => {
-              // Action logic here
-            }}
+            onPress={handlePasswordChange}
+            disabled={loading}
           >
-            <Text style={styles.actionBtnText}>Change Password</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color={ThemeColors.white} />
+            ) : (
+              <Text style={styles.actionBtnText}>Change Password</Text>
+            )}
           </TouchableOpacity>
 
           {/* Go Back Link */}
@@ -195,6 +292,37 @@ const ChangePasswordScreen = ({ navigation }) => {
 
         </View>
       </ScrollView>
+
+      {/* Toast Notification */}
+      {toastVisible && (
+        <Animated.View 
+          style={[
+            styles.toastContainer, 
+            toastType === 'error' ? styles.toastErrorContainer : styles.toastSuccessContainer,
+            { 
+              opacity: toastAnim,
+              transform: [{
+                translateY: toastAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-20, 0]
+                })
+              }]
+            }
+          ]}
+        >
+          <View style={styles.toastIconBox}>
+            <Ionicons 
+              name={toastType === 'error' ? "alert-circle" : "checkmark-circle"} 
+              size={22} 
+              color={toastType === 'error' ? "#C53030" : "#2F855A"} 
+            />
+          </View>
+          <Text style={[styles.toastText, toastType === 'error' ? styles.toastErrorText : styles.toastSuccessText]}>
+            {toastMessage}
+          </Text>
+        </Animated.View>
+      )}
+
     </SafeAreaView>
   );
 };
@@ -210,6 +338,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    width: '100%',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 15,
+    left: 16,
+    zIndex: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   starGold: { position: 'absolute', color: ThemeColors.accentYellow, opacity: 0.95 },
   starGrey: { position: 'absolute', color: ThemeColors.starGrey, opacity: 0.85 },
@@ -280,9 +421,9 @@ const styles = StyleSheet.create({
   coinText: { fontSize: 7, fontWeight: 'bold', color: ThemeColors.coinText },
   scrollContainer: {
     flexGrow: 1,
-    paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 24,
+    alignItems: 'center',
   },
   floatingCard: {
     backgroundColor: ThemeColors.cardBg,
@@ -381,6 +522,44 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: ThemeColors.textMuted,
+  },
+  toastContainer: {
+    position: 'absolute',
+    top: 40,
+    alignSelf: 'center',
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 6,
+    zIndex: 9999,
+  },
+  toastSuccessContainer: {
+    backgroundColor: '#F0FFF4',
+    borderColor: '#C6F6D5',
+  },
+  toastErrorContainer: {
+    backgroundColor: '#FFF5F5',
+    borderColor: '#FED7D7',
+  },
+  toastIconBox: {
+    marginRight: 8,
+  },
+  toastText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  toastSuccessText: {
+    color: '#22543D',
+  },
+  toastErrorText: {
+    color: '#9B2C2C',
   },
 });
 

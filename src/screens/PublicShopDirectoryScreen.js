@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  SafeAreaView,
-  StatusBar,
-  ScrollView,
-  TouchableOpacity,
+import React, { useState, useCallback } from 'react';
+import { 
+  StyleSheet, 
+  Text, 
+  View, 
+  SafeAreaView, 
+  StatusBar, 
+  ScrollView, 
+  TouchableOpacity, 
   TextInput,
   Platform,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useResponsiveLayout } from '../utils/responsive';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -24,7 +26,7 @@ const ThemeColors = {
   borderLight: '#E2E8F0',
 };
 
-const shopsData = [
+const initialShopsData = [
   {
     id: '1',
     name: 'Ayesha General Store',
@@ -57,8 +59,40 @@ const shopsData = [
 const PublicShopDirectoryScreen = ({ navigation }) => {
   const { width, containerMaxWidth } = useResponsiveLayout();
   const [searchQuery, setSearchQuery] = useState('');
+  const [shopsList, setShopsList] = useState(initialShopsData);
 
-  const filteredShops = shopsData.filter((shop) => 
+  // Screen focus par saved shops load karein
+  useFocusEffect(
+    useCallback(() => {
+      const loadShops = async () => {
+        try {
+          const storedShops = await AsyncStorage.getItem('allRegisteredShops');
+          if (storedShops) {
+            const parsedShops = JSON.parse(storedShops);
+            // Initial shops aur AsyncStorage wali shops ko combine kar ke set kardein
+            // Duplicate IDs se bachne ke liye merge logic
+            const allShopsMap = new Map();
+            
+            // Pehle stored shops dalein taake naye register hone wale oopar rahein
+            parsedShops.forEach(shop => allShopsMap.set(shop.id, shop));
+            initialShopsData.forEach(shop => {
+              if (!allShopsMap.has(shop.id)) {
+                allShopsMap.set(shop.id, shop);
+              }
+            });
+
+            setShopsList(Array.from(allShopsMap.values()));
+          }
+        } catch (error) {
+          console.log('Error loading saved shops:', error);
+        }
+      };
+
+      loadShops();
+    }, [])
+  );
+
+  const filteredShops = shopsList.filter((shop) => 
     shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     shop.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
     shop.description.toLowerCase().includes(searchQuery.toLowerCase())

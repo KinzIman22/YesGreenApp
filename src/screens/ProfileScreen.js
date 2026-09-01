@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   StyleSheet, 
   Text, 
@@ -9,10 +9,16 @@ import {
   ScrollView,
   Switch,
   Modal,
-  Dimensions
+  Dimensions,
+  ActivityIndicator,
+  Alert,
+  Image
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather, FontAwesome } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import { useResponsiveLayout } from '../utils/responsive';
+import { getUserProfile } from '../api/authApi';
 
 const { width } = Dimensions.get('window');
 
@@ -27,14 +33,114 @@ const ThemeColors = {
 };
 
 export default function ProfileScreen({ navigation, route }) {
-  const { containerMaxWidth } = useResponsiveLayout();
+  const { containerMaxWidth } = useResponsiveLayout?.() || { containerMaxWidth: 600 };
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [isPhoneModalVisible, setIsPhoneModalVisible] = useState(false);
 
-  const userData = route?.params?.userData || {
-    name: 'Kinz Ul Iman',
-    identifier: '+92 300 1234567',
+  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState({
+    name: '',
+    email: '',
+    identifier: '',
+    profileImage: '', // Image URL ya URI ke liye field
+  });
+
+  const fetchProfile = async () => {
+    try {
+      if (route?.params?.updatedUserData) {
+        setUserData(route.params.updatedUserData);
+        await AsyncStorage.setItem('userData', JSON.stringify(route.params.updatedUserData));
+      } else {
+        const localUserStr = await AsyncStorage.getItem('userData');
+        if (localUserStr) {
+          const localUser = JSON.parse(localUserStr);
+          setUserData({
+            name: localUser?.name || localUser?.fullName || localUser?.userName || '',
+            email: localUser?.email || localUser?.userEmail || '',
+            identifier: localUser?.phone || localUser?.phoneNumber || localUser?.identifier || '',
+            profileImage: localUser?.profileImage || localUser?.avatar || localUser?.image || '',
+          });
+        }
+      }
+
+      const res = await getUserProfile?.().catch(() => null) || null;
+      console.log('=== BACKEND PROFILE RESPONSE ===', res);
+      
+      const profile = res?.user || res?.data?.user || res?.data || res?.profile || res || {};
+      
+      const fetchedName = profile?.name || profile?.fullName || profile?.fullname || profile?.userName || profile?.user_name || profile?.firstName || '';
+      const fetchedEmail = profile?.email || profile?.userEmail || profile?.emailAddress || '';
+      const fetchedPhone = profile?.phone || profile?.phoneNumber || profile?.identifier || profile?.cnicNumber || profile?.phone_number || '';
+      const fetchedImage = profile?.profileImage || profile?.avatar || profile?.image || profile?.photo || '';
+
+      if (fetchedName || fetchedEmail) {
+        const updatedData = {
+          name: fetchedName,
+          email: fetchedEmail,
+          identifier: fetchedPhone,
+          profileImage: fetchedImage,
+        };
+        setUserData(updatedData);
+        await AsyncStorage.setItem('userData', JSON.stringify(updatedData));
+      }
+    } catch (error) {
+      console.log('Error fetching user profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfile();
+    }, [route?.params?.updatedUserData])
+  );
+
+  const handleLogoutPress = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem('access_token');
+
+              await fetch('https://your-api-domain.com/auth/logout', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+              }).catch(() => {});
+
+              await AsyncStorage.removeItem('access_token');
+              await AsyncStorage.removeItem('refreshToken');
+              await AsyncStorage.removeItem('userData');
+
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              });
+            } catch (error) {
+              console.error("Logout Error:", error);
+              await AsyncStorage.removeItem('access_token');
+              await AsyncStorage.removeItem('refreshToken');
+              await AsyncStorage.removeItem('userData');
+              
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              });
+            }
+          }
+        }
+      ]
+    );
   };
 
   const contentWidthStyle = {
@@ -69,18 +175,37 @@ export default function ProfileScreen({ navigation, route }) {
           </View>
 
           <View style={styles.headerContent}>
-            <View style={styles.avatarContainer}>
+            {/* Avatar / Profile Image Container */}
+            <TouchableOpacity 
+              style={styles.avatarContainer} 
+              activeOpacity={0.9}
+              onPress={() => navigation?.navigate?.('UpdateProfile', { userData })}
+            >
               <View style={styles.avatarOutline}>
                 <View style={styles.avatarInner}>
-                  <Ionicons name="person" size={38} color={ThemeColors.white} />
+                  {userData?.profileImage ? (
+                    <Image source={{ uri: userData.profileImage }} style={styles.profileImg} />
+                  ) : (
+                    <Ionicons name="person" size={38} color={ThemeColors.white} />
+                  )}
                 </View>
               </View>
-            </View>
+              {/* Edit small badge on image */}
+              <View style={styles.editBadge}>
+                <Feather name="camera" size={11} color="#FFFFFF" />
+              </View>
+            </TouchableOpacity>
 
-            <View style={styles.userInfoContainer}>
-              <Text style={styles.userName}>{userData.name}</Text>
-              <Text style={styles.userIdentifier}>{userData.identifier}</Text>
-            </View>
+            {loading && !userData?.name ? (
+              <View style={{ paddingVertical: 10 }}>
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              </View>
+            ) : (
+              <View style={styles.userInfoContainer}>
+                <Text style={styles.userName}>{userData?.name || 'User Profile'}</Text>
+                <Text style={styles.userIdentifier}>{userData?.email || userData?.identifier || ''}</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -122,7 +247,7 @@ export default function ProfileScreen({ navigation, route }) {
             <TouchableOpacity 
               style={styles.menuRow} 
               activeOpacity={0.7}
-              onPress={() => navigation.navigate('UpdateProfile')}
+              onPress={() => navigation?.navigate?.('UpdateProfile', { userData })}
             >
               <View style={styles.menuIconBoxGreen}>
                 <Feather name="edit-2" size={16} color="#2F855A" />
@@ -139,7 +264,7 @@ export default function ProfileScreen({ navigation, route }) {
             <TouchableOpacity 
               style={styles.menuRow} 
               activeOpacity={0.7}
-              onPress={() => navigation.navigate('ChangePasswordScreen')}
+              onPress={() => navigation?.navigate?.('ChangePasswordScreen')}
             >
               <View style={styles.menuIconBoxBlue}>
                 <Ionicons name="lock-closed-outline" size={16} color="#3182CE" />
@@ -156,7 +281,7 @@ export default function ProfileScreen({ navigation, route }) {
             <TouchableOpacity 
               style={styles.menuRow} 
               activeOpacity={0.7}
-              onPress={() => navigation.navigate('RegisterShopScreen')}
+              onPress={() => navigation?.navigate?.('RegisterShopScreen')}
             >
               <View style={styles.menuIconBoxStore}>
                 <Ionicons name="storefront-outline" size={16} color="#D69E2E" />
@@ -214,7 +339,7 @@ export default function ProfileScreen({ navigation, route }) {
             <TouchableOpacity 
               style={styles.menuRow} 
               activeOpacity={0.7}
-              onPress={() => navigation.navigate('HelpCenterScreen')}
+              onPress={() => navigation?.navigate?.('HelpCenterScreen')}
             >
               <View style={styles.menuIconBoxLightPurple}>
                 <Ionicons name="help-circle-outline" size={18} color="#805AD5" />
@@ -231,7 +356,7 @@ export default function ProfileScreen({ navigation, route }) {
             <TouchableOpacity 
               style={styles.menuRow} 
               activeOpacity={0.7}
-              onPress={() => navigation.navigate('PrivacyPolicyScreen')}
+              onPress={() => navigation?.navigate?.('PrivacyPolicyScreen')}
             >
               <View style={styles.menuIconBoxLightBlue}>
                 <Ionicons name="shield-outline" size={18} color="#3182CE" />
@@ -248,7 +373,7 @@ export default function ProfileScreen({ navigation, route }) {
             <TouchableOpacity 
               style={styles.menuRow} 
               activeOpacity={0.7}
-              onPress={() => navigation.navigate('TermsConditions')}
+              onPress={() => navigation?.navigate?.('TermsConditions')}
             >
               <View style={styles.menuIconBoxNavy}>
                 <MaterialCommunityIcons name="file-document-outline" size={18} color="#2C5282" />
@@ -262,7 +387,11 @@ export default function ProfileScreen({ navigation, route }) {
           </View>
 
           {/* Logout Button */}
-          <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.8}>
+          <TouchableOpacity 
+            style={styles.logoutBtn} 
+            activeOpacity={0.8}
+            onPress={handleLogoutPress}
+          >
             <Ionicons name="log-out-outline" size={20} color="#2C5282" style={{ marginRight: 8 }} />
             <Text style={styles.logoutBtnText}>Logout</Text>
           </TouchableOpacity>
@@ -271,7 +400,7 @@ export default function ProfileScreen({ navigation, route }) {
           <TouchableOpacity 
             style={styles.deleteAccountBtn} 
             activeOpacity={0.8}
-            onPress={() => navigation.navigate('DeleteAccountScreen', { userData })}
+            onPress={() => navigation?.navigate?.('DeleteAccountScreen', { userData })}
           >
             <Ionicons name="trash-outline" size={20} color="#E53E3E" style={{ marginRight: 8 }} />
             <Text style={styles.deleteAccountText}>Delete Account</Text>
@@ -355,6 +484,7 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     marginBottom: 10,
+    position: 'relative',
   },
   avatarOutline: {
     width: 78,
@@ -372,6 +502,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  profileImg: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  editBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#2F855A',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
   userInfoContainer: {
     alignItems: 'center',

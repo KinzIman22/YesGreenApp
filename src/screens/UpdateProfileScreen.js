@@ -9,8 +9,14 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
+  ActivityIndicator,
+  Alert,
+  Platform
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+import { updateProfile } from '../api/authApi';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -36,12 +42,105 @@ const ThemeColors = {
 
 const UpdateProfileScreen = ({ navigation, route }) => {
   const initialData = route?.params?.userData || {
-    name: 'Kinz Ul Iman',
-    email: 'kinz@example.com',
+    name: '',
+    email: '',
+    profileImage: '',
   };
 
   const [fullName, setFullName] = useState(initialData.name);
+  const [profileImage, setProfileImage] = useState(initialData.profileImage || '');
+  const [loading, setLoading] = useState(false);
   const emailAddress = initialData.email || '—';
+
+  // Gallery se image pick karne ka function
+  const handlePickImage = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert("Permission Denied", "Permission to access camera roll is required!");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setProfileImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.log('Error picking image:', error);
+      Alert.alert('Error', 'Something went wrong while selecting the image.');
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!fullName.trim()) {
+      Alert.alert('Error', 'Please enter your full name.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Agar backend par image bhi FormData ke zariye bhejni ho
+      const formData = new FormData();
+      formData.append('name', fullName.trim());
+
+      if (profileImage && profileImage.startsWith('file://')) {
+        const filename = profileImage.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image/jpeg`;
+
+        formData.append('profileImage', {
+          uri: Platform.OS === 'ios' ? profileImage.replace('file://', '') : profileImage,
+          name: filename,
+          type,
+        });
+      }
+
+      // Backend par update API call (Agar FormData support na ho toh { name: fullName.trim() } pass kar dein)
+      await updateProfile(formData).catch(() => {
+        // Fallback agar backend sirf JSON accept karta ho aur image handle na kar raha ho
+        return updateProfile({ name: fullName.trim() });
+      });
+      
+      const trimmedName = fullName.trim();
+
+      // LocalStorage ko foran update karein taake data sync rahe
+      const existingUserStr = await AsyncStorage.getItem('userData');
+      const existingUser = existingUserStr ? JSON.parse(existingUserStr) : {};
+      const updatedUserObj = {
+        ...existingUser,
+        name: trimmedName,
+        email: initialData.email,
+        profileImage: profileImage,
+      };
+      await AsyncStorage.setItem('userData', JSON.stringify(updatedUserObj));
+      
+      Alert.alert('Success', 'Profile updated successfully!', [
+        { 
+          text: 'OK', 
+          onPress: () => {
+            // Wapis jate waqt updated params pass kar dein
+            navigation.navigate('ProfileScreen', { 
+              updatedName: trimmedName, 
+              updatedImage: profileImage 
+            });
+          } 
+        }
+      ]);
+    } catch (error) {
+      console.log('Update profile error:', error);
+      Alert.alert('Error', error?.response?.data?.message || 'Failed to update profile. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -49,7 +148,6 @@ const UpdateProfileScreen = ({ navigation, route }) => {
 
       {/* Top Section */}
       <View style={styles.topSection}>
-        {/* Back Button */}
         <TouchableOpacity 
           style={styles.backButton} 
           onPress={() => navigation.goBack()}
@@ -58,23 +156,19 @@ const UpdateProfileScreen = ({ navigation, route }) => {
           <Ionicons name="chevron-back" size={20} color={ThemeColors.white} />
         </TouchableOpacity>
 
-        {/* Background Stars */}
         <Text style={[styles.starGold, { top: 12, left: 18, fontSize: 18 }]}>★</Text>
         <Text style={[styles.starGrey, { top: 15, left: 110, fontSize: 13 }]}>★</Text>
         <Text style={[styles.starGold, { bottom: 18, left: 22, fontSize: 16 }]}>★</Text>
-
         <Text style={[styles.starGold, { top: 18, right: 150, fontSize: 12 }]}>★</Text>
         <Text style={[styles.starGrey, { top: 75, right: 25, fontSize: 15 }]}>★</Text>
         <Text style={[styles.starGold, { bottom: 20, right: 18, fontSize: 14 }]}>★</Text>
 
-        {/* Background Dots */}
         <View style={[styles.dotGold, { top: 38, left: 65 }]} />
         <View style={[styles.dotGrey, { top: 70, left: 20 }]} />
         <View style={[styles.dotGold, { top: 110, left: 75 }]} />
         <View style={[styles.dotGrey, { top: 32, right: 100 }]} />
         <View style={[styles.dotGold, { top: 115, right: 55 }]} />
 
-        {/* Number Badges */}
         <View style={[styles.numberBadgeSmall, styles.badge2]}>
           <Text style={styles.badgeTextSmall}>2</Text>
         </View>
@@ -85,7 +179,6 @@ const UpdateProfileScreen = ({ navigation, route }) => {
           <Text style={styles.badgeTextSmall}>4</Text>
         </View>
 
-        {/* Coins Stack */}
         <View style={styles.coinStack}>
           <View style={[styles.coin, styles.topCoin]}>
             <Text style={styles.coinText}>PKR</Text>
@@ -95,7 +188,6 @@ const UpdateProfileScreen = ({ navigation, route }) => {
           <View style={styles.coin} />
         </View>
 
-        {/* Header Content */}
         <View style={styles.headerContent}>
           <Image
             source={require('../assets/LoginLogo.png')}
@@ -109,7 +201,6 @@ const UpdateProfileScreen = ({ navigation, route }) => {
         </View>
       </View>
 
-      {/* Floating Card */}
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
@@ -121,17 +212,29 @@ const UpdateProfileScreen = ({ navigation, route }) => {
             Update your name or profile photo. Your email address cannot be changed.
           </Text>
 
-          {/* Avatar Upload Section */}
+          {/* Avatar & Camera Clickable Section */}
           <View style={styles.avatarSection}>
-            <View style={styles.avatarContainer}>
-              <Ionicons name="person" size={42} color={ThemeColors.iconGrey} />
-            </View>
-            <TouchableOpacity style={styles.cameraBadgeBtn} activeOpacity={0.8}>
+            <TouchableOpacity 
+              style={styles.avatarContainer} 
+              activeOpacity={0.9}
+              onPress={handlePickImage}
+            >
+              {profileImage ? (
+                <Image source={{ uri: profileImage }} style={styles.profileImg} />
+              ) : (
+                <Ionicons name="person" size={42} color={ThemeColors.iconGrey} />
+              )}
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.cameraBadgeBtn} 
+              activeOpacity={0.8}
+              onPress={handlePickImage}
+            >
               <Ionicons name="camera" size={14} color={ThemeColors.white} />
             </TouchableOpacity>
           </View>
 
-          {/* Full Name Field */}
           <Text style={styles.inputLabel}>Full Name</Text>
           <View style={styles.inputWrapper}>
             <Ionicons name="person-outline" size={18} color={ThemeColors.iconGrey} style={styles.inputIcon} />
@@ -144,7 +247,6 @@ const UpdateProfileScreen = ({ navigation, route }) => {
             />
           </View>
 
-          {/* Email Address Field (Fixed) */}
           <Text style={styles.inputLabel}>Email Address</Text>
           <View style={[styles.inputWrapper, styles.disabledInputWrapper]}>
             <Feather name="mail" size={18} color={ThemeColors.iconGrey} style={styles.inputIcon} />
@@ -158,16 +260,19 @@ const UpdateProfileScreen = ({ navigation, route }) => {
             </View>
           </View>
 
-          {/* Update Profile Button */}
           <TouchableOpacity 
             style={styles.loginBtn} 
             activeOpacity={0.8}
-            onPress={() => navigation.goBack()}
+            onPress={handleUpdate}
+            disabled={loading}
           >
-            <Text style={styles.loginBtnText}>Update Profile</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color={ThemeColors.white} />
+            ) : (
+              <Text style={styles.loginBtnText}>Update Profile</Text>
+            )}
           </TouchableOpacity>
 
-          {/* Go Back Link */}
           <TouchableOpacity 
             style={styles.goBackRow} 
             onPress={() => navigation.goBack()}
@@ -206,8 +311,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 20,
   },
-
-  // Stars & Dots
   starGold: { position: 'absolute', color: ThemeColors.accentYellow, opacity: 0.95 },
   starGrey: { position: 'absolute', color: ThemeColors.starGrey, opacity: 0.85 },
   dotGold: {
@@ -226,14 +329,11 @@ const styles = StyleSheet.create({
     backgroundColor: ThemeColors.starGrey,
     opacity: 0.8,
   },
-
   headerContent: { alignItems: 'center', marginTop: 10 },
   logoImage: { width: 60, height: 60, marginBottom: 6 },
   brandTitle: { fontSize: 22, fontWeight: 'bold', color: ThemeColors.white },
   brandTitleGold: { color: ThemeColors.accentYellow },
   brandSubtitle: { fontSize: 12, color: ThemeColors.white, opacity: 0.8, marginTop: 2 },
-
-  // Badges & Coins
   numberBadge: {
     position: 'absolute',
     width: 38,
@@ -261,7 +361,6 @@ const styles = StyleSheet.create({
   badge2: { top: '12%', right: '28%' },
   badge7: { top: '18%', right: '12%' },
   badge4: { top: '42%', right: '5%' },
-
   coinStack: { position: 'absolute', left: '5%', top: '25%', alignItems: 'center' },
   coin: {
     width: 44,
@@ -279,8 +378,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   coinText: { fontSize: 7, fontWeight: 'bold', color: ThemeColors.coinText },
-
-  // Scroll Container & Floating Card
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: 16,
@@ -301,8 +398,6 @@ const styles = StyleSheet.create({
   },
   welcomeTitle: { fontSize: 24, fontWeight: 'bold', color: ThemeColors.textDark, marginBottom: 6 },
   welcomeSubtitle: { fontSize: 13, color: ThemeColors.textMuted, marginBottom: 20, lineHeight: 18 },
-
-  // Avatar Section
   avatarSection: {
     alignItems: 'center',
     marginBottom: 16,
@@ -318,6 +413,12 @@ const styles = StyleSheet.create({
     borderColor: ThemeColors.inputBorder,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  profileImg: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   cameraBadgeBtn: {
     position: 'absolute',
@@ -332,8 +433,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: ThemeColors.white,
   },
-
-  // Inputs & Vector Icons
   inputLabel: { fontSize: 13, fontWeight: 'bold', color: ThemeColors.textDark, marginBottom: 8, marginTop: 10 },
   inputWrapper: {
     flexDirection: 'row',
@@ -352,7 +451,6 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   textInput: { flex: 1, fontSize: 14, color: ThemeColors.textDark },
-
   fixedBadge: {
     backgroundColor: '#F0FFF4',
     paddingHorizontal: 10,
@@ -366,8 +464,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#2F855A',
   },
-
-  // Login/Update Button Style matching Login screen button
   loginBtn: {
     backgroundColor: ThemeColors.buttonGreen,
     borderRadius: 12,
@@ -384,7 +480,6 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   loginBtnText: { color: ThemeColors.white, fontSize: 15, fontWeight: 'bold' },
-
   goBackRow: { 
     flexDirection: 'row', 
     justifyContent: 'center', 

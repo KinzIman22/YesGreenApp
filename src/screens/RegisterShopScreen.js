@@ -9,13 +9,13 @@ import {
   ScrollView,
   TextInput,
   Modal,
-  FlatList,
   Image,
   Animated,
   Dimensions,
-  Platform
+  ActivityIndicator
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -61,7 +61,6 @@ export default function RegisterShopScreen({ navigation }) {
     return () => subscription?.remove();
   }, []);
 
-  // Responsive max width calculation for tablet/web views
   const isLargeScreen = windowWidth > 768;
   const contentMaxWidth = isLargeScreen ? 600 : '100%';
   const horizontalPadding = isLargeScreen ? 24 : 16;
@@ -72,6 +71,7 @@ export default function RegisterShopScreen({ navigation }) {
   const [shopType, setShopType] = useState('');
   const [address, setAddress] = useState('');
   const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const [isShopTypeModalVisible, setIsShopTypeModalVisible] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
@@ -100,29 +100,61 @@ export default function RegisterShopScreen({ navigation }) {
     }, 2500);
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!shopName.trim() || !ownerName.trim() || !phoneNumber.trim() || !shopType.trim() || !address.trim() || !description.trim()) {
       showToast('Please fill in all fields!', 'error');
       return;
     }
 
-    setShopName('');
-    setOwnerName('');
-    setPhoneNumber('');
-    setShopType('');
-    setAddress('');
-    setDescription('');
+    try {
+      setLoading(true);
 
-    showToast('Registered Successfully!', 'success');
+      // Local storage ke liye shop data object
+      const newShopData = {
+        id: Date.now().toString(),
+        name: shopName.trim(),
+        owner: ownerName.trim(),
+        phone: phoneNumber.trim(),
+        location: address.trim(),
+        description: description.trim(),
+        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      };
+
+      // AsyncStorage mein save karein taake PublicShopDirectoryScreen par nazar aaye
+      const existingShops = await AsyncStorage.getItem('allRegisteredShops');
+      const shopsArray = existingShops ? JSON.parse(existingShops) : [];
+      shopsArray.unshift(newShopData);
+      await AsyncStorage.setItem('allRegisteredShops', JSON.stringify(shopsArray));
+
+      showToast('Shop Registered Successfully!', 'success');
+      
+      // Clear form inputs
+      setShopName('');
+      setOwnerName('');
+      setPhoneNumber('');
+      setShopType('');
+      setAddress('');
+      setDescription('');
+
+      // Navigate back after a short delay
+      setTimeout(() => {
+        navigation.goBack();
+      }, 1500);
+
+    } catch (error) {
+      console.log('Register shop error:', error);
+      showToast('Failed to register shop. Please try again.', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={ThemeColors.primaryDark} />
 
-      {/* Top Section matching LoginScreen */}
+      {/* Top Section */}
       <View style={styles.topSection}>
-        {/* Back Button */}
         <TouchableOpacity 
           style={styles.backButton} 
           activeOpacity={0.8}
@@ -131,23 +163,20 @@ export default function RegisterShopScreen({ navigation }) {
           <Ionicons name="chevron-back" size={24} color={ThemeColors.white} />
         </TouchableOpacity>
 
-        {/* Background Stars */}
+        {/* Background Stars & Dots */}
         <Text style={[styles.starGold, { top: 12, left: 18, fontSize: 18 }]}>★</Text>
         <Text style={[styles.starGrey, { top: 15, left: 110, fontSize: 13 }]}>★</Text>
         <Text style={[styles.starGold, { bottom: 18, left: 22, fontSize: 16 }]}>★</Text>
-
         <Text style={[styles.starGold, { top: 18, right: 150, fontSize: 12 }]}>★</Text>
         <Text style={[styles.starGrey, { top: 75, right: 25, fontSize: 15 }]}>★</Text>
         <Text style={[styles.starGold, { bottom: 20, right: 18, fontSize: 14 }]}>★</Text>
 
-        {/* Background Dots */}
         <View style={[styles.dotGold, { top: 38, left: 65 }]} />
         <View style={[styles.dotGrey, { top: 70, left: 20 }]} />
         <View style={[styles.dotGold, { top: 110, left: 75 }]} />
         <View style={[styles.dotGrey, { top: 32, right: 100 }]} />
         <View style={[styles.dotGold, { top: 115, right: 55 }]} />
 
-        {/* Number Badges */}
         <View style={[styles.numberBadgeSmall, styles.badge2]}>
           <Text style={styles.badgeTextSmall}>2</Text>
         </View>
@@ -158,7 +187,6 @@ export default function RegisterShopScreen({ navigation }) {
           <Text style={styles.badgeTextSmall}>4</Text>
         </View>
 
-        {/* Coins Stack */}
         <View style={styles.coinStack}>
           <View style={[styles.coin, styles.topCoin]}>
             <Text style={styles.coinText}>PKR</Text>
@@ -168,7 +196,6 @@ export default function RegisterShopScreen({ navigation }) {
           <View style={styles.coin} />
         </View>
 
-        {/* Header Content */}
         <View style={styles.headerContent}>
           <Image
             source={require('../assets/LoginLogo.png')}
@@ -284,8 +311,13 @@ export default function RegisterShopScreen({ navigation }) {
             style={styles.loginBtn} 
             activeOpacity={0.8}
             onPress={handleRegister}
+            disabled={loading}
           >
-            <Text style={styles.loginBtnText}>Register Shop</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color={ThemeColors.white} />
+            ) : (
+              <Text style={styles.loginBtnText}>Register Shop</Text>
+            )}
           </TouchableOpacity>
 
           {/* Go Back Link */}
@@ -300,7 +332,7 @@ export default function RegisterShopScreen({ navigation }) {
         </View>
       </ScrollView>
 
-      {/* Toastify Notification Popup */}
+      {/* Toast Notification */}
       {toastVisible && (
         <Animated.View 
           style={[
@@ -330,7 +362,7 @@ export default function RegisterShopScreen({ navigation }) {
         </Animated.View>
       )}
 
-      {/* Shop Type Selection Modal */}
+      {/* Shop Type Modal */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -346,28 +378,31 @@ export default function RegisterShopScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            <FlatList
-              data={SHOP_TYPES}
-              keyExtractor={(item, index) => index.toString()}
-              showsVerticalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={styles.modalItemRow}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    setShopType(item);
-                    setIsShopTypeModalVisible(false);
-                  }}
-                >
-                  <Text style={[styles.modalItemText, shopType === item && styles.selectedModalItemText]}>
-                    {item}
-                  </Text>
-                  {shopType === item && (
-                    <Ionicons name="checkmark" size={18} color={ThemeColors.primaryDark} />
-                  )}
-                </TouchableOpacity>
-              )}
-            />
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {SHOP_TYPES.map((item, index) => {
+                const isSelected = shopType === item;
+                return (
+                  <TouchableOpacity 
+                    key={index}
+                    style={styles.modalItemRow}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setIsShopTypeModalVisible(false);
+                      setTimeout(() => {
+                        setShopType(item);
+                      }, 100);
+                    }}
+                  >
+                    <Text style={[styles.modalItemText, isSelected && styles.selectedModalItemText]}>
+                      {item}
+                    </Text>
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={18} color={ThemeColors.primaryDark} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -401,8 +436,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  // Stars & Dots
   starGold: { position: 'absolute', color: ThemeColors.accentYellow, opacity: 0.95 },
   starGrey: { position: 'absolute', color: ThemeColors.starGrey, opacity: 0.85 },
   dotGold: {
@@ -421,14 +454,11 @@ const styles = StyleSheet.create({
     backgroundColor: ThemeColors.starGrey,
     opacity: 0.8,
   },
-
   headerContent: { alignItems: 'center', marginTop: 10 },
   logoImage: { width: 60, height: 60, marginBottom: 6 },
   brandTitle: { fontSize: 22, fontWeight: 'bold', color: ThemeColors.white },
   brandTitleGold: { color: ThemeColors.accentYellow },
   brandSubtitle: { fontSize: 12, color: ThemeColors.white, opacity: 0.8, marginTop: 2 },
-
-  // Badges & Coins
   numberBadge: {
     position: 'absolute',
     width: 38,
@@ -456,7 +486,6 @@ const styles = StyleSheet.create({
   badge2: { top: '12%', right: '28%' },
   badge7: { top: '18%', right: '12%' },
   badge4: { top: '42%', right: '5%' },
-
   coinStack: { position: 'absolute', left: '5%', top: '25%', alignItems: 'center' },
   coin: {
     width: 44,
@@ -474,8 +503,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   coinText: { fontSize: 7, fontWeight: 'bold', color: ThemeColors.coinText },
-
-  // Scroll Container & Floating Card
   scrollContainer: {
     flexGrow: 1,
     paddingTop: 16,
@@ -496,8 +523,6 @@ const styles = StyleSheet.create({
   },
   welcomeTitle: { fontSize: 24, fontWeight: 'bold', color: ThemeColors.textDark, marginBottom: 6 },
   welcomeSubtitle: { fontSize: 13, color: ThemeColors.textMuted, marginBottom: 20 },
-
-  // Inputs & Vector Icons
   inputLabel: { fontSize: 13, fontWeight: 'bold', color: ThemeColors.textDark, marginBottom: 6, marginTop: 10 },
   inputWrapper: {
     flexDirection: 'row',
@@ -533,8 +558,6 @@ const styles = StyleSheet.create({
     height: '100%',
     textAlignVertical: 'top',
   },
-
-  // Register Button
   loginBtn: {
     backgroundColor: ThemeColors.buttonGreen,
     borderRadius: 12,
@@ -553,8 +576,6 @@ const styles = StyleSheet.create({
   loginBtnText: { color: ThemeColors.white, fontSize: 15, fontWeight: 'bold' },
   footerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 20 },
   signUpText: { fontSize: 13, fontWeight: 'bold', color: ThemeColors.forgotText },
-
-  // Toast Notification Styles
   toastContainer: {
     position: 'absolute',
     top: 40,
@@ -593,8 +614,6 @@ const styles = StyleSheet.create({
   toastErrorText: {
     color: '#9B2C2C',
   },
-
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -642,6 +661,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: ThemeColors.textMuted,
     fontWeight: '500',
+    flex: 1,
   },
   selectedModalItemText: {
     color: ThemeColors.primaryDark,

@@ -45,3 +45,27 @@ export const resetPassword = async ({ email, code, newPassword }) => {
   const { data } = await api.post('/auth/reset-password', { email, code, newPassword });
   return data;
 };
+
+// Profile update karne ke liye (ProfileScreen / UpdateProfileScreen calls)
+export const updateProfile = async (payload) => {
+  const { data } = await api.put('/profile/update', payload);
+  return data;
+};
+
+// Password change karne ke liye (ChangePasswordScreen calls)
+export const changePassword = async (payload) => {
+  const { data } = await api.post('/auth/change-password', payload);
+  return data;
+};
+
+// Shop register karne ke liye (RegisterShopScreen calls)
+export const registerShop = async (payload) => {
+  const { data } = await api.post('/shop/register', payload);
+  return data;
+};
+
+// User profile fetch karne ke liye (UpdateProfileScreen calls)
+export const getUserProfile = async () => {
+  const { data } = await api.get('/auth/profile');
+  return data;
+};

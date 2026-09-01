@@ -4,12 +4,13 @@ import {
   Text,
   View,
   TouchableOpacity,
-  Image,
   SafeAreaView,
   StatusBar,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ThemeColors = {
   primaryDark: '#054A29',
@@ -41,11 +42,53 @@ const DeleteAccountScreen = ({ navigation, route }) => {
   };
 
   const handleDeleteAccountPress = () => {
-    // Delete Account button press hone par user ko wapis Home page par bhej dega
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'TabNavigator', params: { screen: 'Home' } }],
-    });
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to permanently delete your account? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // 1. AsyncStorage se saved access_token nikalna
+              const token = await AsyncStorage.getItem('access_token');
+
+              // 2. API Call to backend (apne backend base URL ke mutabiq adjust karein)
+              const response = await fetch('https://your-api-domain.com/profile/delete-account', {
+                method: 'DELETE',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+              });
+
+              const data = await response.json();
+
+              if (response.ok) {
+                // 3. Local storage se tokens clear karna
+                await AsyncStorage.removeItem('access_token');
+                await AsyncStorage.removeItem('refreshToken');
+                await AsyncStorage.removeItem('userData');
+
+                // 4. Success message aur Navigation to Login screen
+                Alert.alert("Success", "Account deleted successfully");
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Login' }],
+                });
+              } else {
+                Alert.alert("Error", data.message || "Failed to delete account.");
+              }
+            } catch (error) {
+              console.error(error);
+              Alert.alert("Error", "Network error or server down.");
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -84,7 +127,7 @@ const DeleteAccountScreen = ({ navigation, route }) => {
         {/* Coins Stack */}
         <View style={styles.coinStack}>
           <View style={[styles.coin, styles.topCoin]}>
-            <Text style={styles.coinText}>PKR</Text>
+            <Text style={styles.coinTextSmall}>PKR</Text>
           </View>
           <View style={styles.coin} />
           <View style={styles.coin} />
@@ -128,7 +171,7 @@ const DeleteAccountScreen = ({ navigation, route }) => {
             <Text style={styles.reloadBtnText}>Reload</Text>
           </TouchableOpacity>
 
-          {/* Delete Account Button (Redirects to Home) */}
+          {/* Delete Account Button */}
           <TouchableOpacity 
             style={styles.deleteBtn} 
             activeOpacity={0.8}
@@ -239,7 +282,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  coinText: { fontSize: 7, fontWeight: 'bold', color: ThemeColors.coinText },
+  coinTextSmall: { fontSize: 7, fontWeight: 'bold', color: ThemeColors.coinText },
   
   scrollContainer: {
     flexGrow: 1,
